@@ -28,6 +28,7 @@ exports.FakeUserRepository = class FakeUserRepository {
      * @returns {Promise<User>}
      */
     async add(user) {
+        if (user.id !== undefined) throw "User with id unexpected.";
         user.id = `${this.#users.size}`;
         this.#users.set(user.id, user);
         return user;
