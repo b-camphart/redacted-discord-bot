@@ -19,4 +19,8 @@ exports.FakeGameRepository = class FakeGameRepository {
         this.#games.set(game.id, game);
         return game;
     }
+
+    async replace(game) {
+        this.#games.set(game.id, game);
+    }
 };

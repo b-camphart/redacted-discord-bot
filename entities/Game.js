@@ -27,7 +27,19 @@ exports.Game = class Game {
         this.#userIds.add(userId);
     }
 
+    /**
+     * @returns {string[]} the ids of users that have been added to the game so far.
+     */
     getUsers() {
-        return [...this.#userIds];
+        return Array.from(this.#userIds);
+    }
+
+    /**
+     * Checks if the userId is in the game.
+     * @param {string} userId The user id to check
+     * @returns {boolean} `true` if the user is in the game, `false` otherwise.
+     */
+    hasUser(userId) {
+        return this.#userIds.has(userId);
     }
 };
