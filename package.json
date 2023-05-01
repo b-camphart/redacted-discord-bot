@@ -18,7 +18,7 @@
         "node": ">=16.9.0"
     },
     "repository": {
-        "url": "https://github.com/b-camphart/redacted-discord-bot/"
+        "url": "https://github.com/b-camphart/redacted/"
     },
     "license": "MIT",
     "keywords": [
