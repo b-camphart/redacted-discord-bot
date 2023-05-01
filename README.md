@@ -33,8 +33,8 @@ Before you get started, make sure you have the following installed on your syste
 
 ## Running
 
-To run the server locally, run `npm start` (type Ctrl+C to stop it)
-To run the tests, run `npm test`
+-   To run the server locally, run `npm start` (type Ctrl+C to stop it)
+-   To run the tests, run `npm test`
 
 ## Architecture
 
