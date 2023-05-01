@@ -1,60 +1,48 @@
-# Hello SQLite!
+# Redacted
 
-This project includes a [Node.js](https://nodejs.org/en/about/) server script that uses a persistent [SQLite](https://www.sqlite.org) database. The app also includes a front-end with two web pages that connect to the database using the server API. 📊
+This is a recreation of the game Redacted created by [Meshiest](https://github.com/Meshiest/outofcontext) with some additional features (coming soon!)
 
-The home page presents the user with a poll where they can choose an option, then the page presents the results in a chart. The admin page displays the log of past choices and allows the user to clear it by supplying an admin key (you can set this up by following the steps in `TODO.md`). 🔒
+## Contexts
 
-_Last updated: 20 Mar 2023_
+### Discord Bot
 
-## Prerequisites
+The intention is to add a discord bot that would allow friends within a discord server to easily create a game, play online, and have the finished stories be automatically posted to a designated channel within the server.
 
-To get best use out of this project you'll ideally be familiar with JavaScript and have a little Node.js experience–check out [Hello Node](https://glitch.com/~glitch-hello-node) if you haven't already!
+### Http
 
-## What's in this project?
+The game can be played entirely through the web with no authetication whatsoever. Keep your game code secret!
 
-← `README.md`: That’s this file, where you can tell people what your cool website does and how you built it.
+# Contributing
 
-← `package.json`: The NPM packages for your project's dependencies.
+## Setup
 
-← `.env`: The environment is cleared when you initially remix the project, but you will add a new env variable value when you follow the steps in `TODO.md` to set up an admin key.
+### Prerequisites
 
-### Server and database
+Before you get started, make sure you have the following installed on your system:
 
-← `server.js`: The Node.js server script for your new site. The JavaScript defines the endpoints in the site API. The API processes requests, connects to the database using the `sqlite` script in `src`, and sends info back to the client (the web pages that make up the app user interface, built using the Handlebars templates in `src/pages`).
+-   Node.js
+-   Git
+-   NPM
 
-← `/src/sqlite.js`: The database script handles setting up and connecting to the SQLite database. The `server.js` API endpoints call the functions in the database script to manage the data.
+### Steps
 
-← `/src/data.json`: The data config file includes the database manager script–`server.js` reads the `database` property to import the correct script.
+1. Fork this repository to your own account by clicking the "Fork" button in the top-right corner of this page.
+2. Clone your forked repository to your local machine using git clone https://github.com/your-username/project-name.git.
+3. Navigate to the project directory by running cd project-name.
+4. Install the project dependencies by running `npm install`.
 
-When the app runs, the scripts build the database:
+## Running
 
-← `.data/choices.db`: Your database is created and placed in the `.data` folder, a hidden directory whose contents aren’t copied when a project is remixed. You can see the contents of `.data` in the console by selecting __Tools__ >  __Logs__.
+To run the server locally, run `npm start` (type Ctrl+C to stop it)
+To run the tests, run `npm test`
 
-### User interface
+## Architecture
 
-← `public/style.css`: The style rules that define the site appearance.
+-   The `__tests__` directory is where the tests are located, which follows the same structure as the root folder. Tests for `usecases`, for example, are located in the `__tests__/usecases` folder.
+-   The `doubles` directory contains test doubles, such as Dummies, Stubs, Spys, Mocks, and Fakes. This is also where factories, to decouple the production classes from the tests, are located, as well as any contracts that need to be written.
+-   The `entites` directory contains the domain objects for the Redacted game. Things like a "Story" a "Game" and a "Player." They exist completely separate from the _environment_ in which they are used - thus **absolutely NO persistence code** is found within them. They only exist as ways to abstract the concepts of the game.
+-   The `repositories` directory contains the top-level definitions for the types of repositories that exist. The types of errors that specific repositories might throw are located here as well.
+-   The `usecases` directory contains all the logic for the Redacted game. Creating a new game, players joining and leaving, stories being told, etc. This is all _game logic_ that exists regardless of the _environment_ the game is being run within.
+-   Finally, the `environments` diretory. This is where _environment-specific_ code is located. Here, you'll find the directories and files that would be expected for an http server. Also, the discord bot. You'll find repository implementations located within this folder as well.
 
-← `src/pages`: The handlebars files that make up the site user interface. The API in `server.js` sends data to these templates to include in the HTML.
-
-← `src/pages/index.hbs`: The site homepage presents a form when the user first visits. When the visitor submits a preference through the form, the app calls the `POST` endpoint `/`, passing the user selection. The `server.js` endpoint updates the database and returns the user choices submitted so far, which the page presents in a chart (using [Chart.js](https://www.chartjs.org/docs/)–you can see the code in the page `head`).
-
-← `src/pages/admin.hbs`: The admin page presents a table displaying the log of most recent picks. You can clear the list by setting up your admin key (see `TODO.md`). If the user attempts to clear the list without a valid key, the page will present the log again.
-
-← `src/seo.json`: When you're ready to share your new site or add a custom domain, change SEO/meta settings in here.
-
-## Try this next 🏗️
-
-Take a look in `TODO.md` for steps in setting up your admin key and adding to the site functionality.
-
-💡 __Want to use the server script as an API without using the front-end UI? No problem! Just send a query parameter `?raw=json` with your requests to return JSON, like this (replace the first part of the URL to match your remix): `glitch-hello-sqlite.glitch.me?raw=json`__
-
-___Check out [Blank SQLite](https://glitch.com/~glitch-blank-sqlite) for a minimal demo of get, post, put, and delete methods.___
-
-![Glitch](https://cdn.glitch.com/a9975ea6-8949-4bab-addb-8a95021dc2da%2FLogo_Color.svg?v=1602781328576)
-
-## You built this with Glitch!
-
-[Glitch](https://glitch.com) is a friendly community where millions of people come together to build web apps and websites.
-
-- Need more help? [Check out our Help Center](https://help.glitch.com/) for answers to any common questions.
-- Ready to make it official? [Become a paid Glitch member](https://glitch.com/pricing) to boost your app with private sharing, more storage and memory, domains and more.
+At the top level of the project, the `server.js` file (to be renamed) is where all the dependencies are pulled together and injected.
