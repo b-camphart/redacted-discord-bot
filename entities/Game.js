@@ -50,7 +50,7 @@ class Game {
     /**
      *
      * @param {string} userId
-     * @returns {UserActivity | undefined}
+     * @returns {PlayerActivity | undefined}
      */
     userActivity(userId) {
         return this.#users.get(userId)?.activity();
@@ -86,7 +86,7 @@ const AWAITING_START = "awaiting-start";
 const STARTING_STORY = "starting-story";
 
 /**
- * @typedef {typeof AWAITING_START | typeof STARTING_STORY} UserActivity
+ * @typedef {typeof AWAITING_START | typeof STARTING_STORY} PlayerActivity
  */
 
 class UserInGame {
@@ -96,7 +96,7 @@ class UserInGame {
     /**
      *
      * @param {string} id
-     * @param {UserActivity} activity
+     * @param {PlayerActivity} activity
      */
     constructor(id, activity) {
         this.#id = id;
