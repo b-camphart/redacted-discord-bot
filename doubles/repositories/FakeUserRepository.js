@@ -1,4 +1,5 @@
 /** @typedef {import("../../repositories/UserRepository").UserRepository} UserRepository */
+/** @typedef {import("../../repositories/UserRepository").UserWithId} UserWithId */
 
 const { User } = require("../../entities/User");
 
@@ -6,7 +7,7 @@ const { User } = require("../../entities/User");
  * @implements {UserRepository}
  */
 exports.FakeUserRepository = class FakeUserRepository {
-    /** @type {Map<string, User>} */
+    /** @type {Map<string, UserWithId>} */
     #users;
 
     constructor() {
@@ -16,7 +17,7 @@ exports.FakeUserRepository = class FakeUserRepository {
     /**
      *
      * @param {string} userId
-     * @returns {Promise<User | undefined>}
+     * @returns {Promise<UserWithId | undefined>}
      */
     async get(userId) {
         return this.#users.get(userId);
@@ -25,12 +26,22 @@ exports.FakeUserRepository = class FakeUserRepository {
     /**
      *
      * @param {User} user
-     * @returns {Promise<User>}
+     * @returns {Promise<UserWithId>}
      */
     async add(user) {
         if (user.id !== undefined) throw "User with id unexpected.";
+        const userWithId = this.#addIdToUser(user);
+        this.#users.set(userWithId.id, userWithId);
+        return userWithId;
+    }
+
+    /**
+     *
+     * @param {User} user
+     * @returns {UserWithId}
+     */
+    #addIdToUser(user) {
         user.id = `${this.#users.size}`;
-        this.#users.set(user.id, user);
-        return user;
+        return /** @type {UserWithId} */ (user);
     }
 };
