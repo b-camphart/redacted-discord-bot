@@ -10,7 +10,7 @@ const {
 const {
     makeAddPlayerToGame,
 } = require("../../../doubles/usecases/addPlayerToGame/addPlayerToGameFactory");
-const { Game } = require("../../../entities/Game");
+const { Game, GameAlreadyStarted } = require("../../../entities/Game");
 const { User } = require("../../../entities/User");
 const { GameNotFound } = require("../../../repositories/GameRepository");
 const { UserNotFound } = require("../../../repositories/UserRepository");
@@ -25,8 +25,10 @@ const {
 } = require("../../../usecases/addPlayerToGame/UserAlreadyInGame");
 
 describe("AddPlayerToGame", () => {
+    /** @type {import("../../../usecases/addPlayerToGame/AddPlayerToGame").AddPlayerToGame} */
     let addPlayerToGame;
     let gameRepository;
+    /** @type {import("../../../repositories/UserRepository").UserRepository} */
     let userRepository;
     /** @type {PlayerNotifierSpy} */
     let playerNotifierSpy;
@@ -64,6 +66,20 @@ describe("AddPlayerToGame", () => {
 
         await expect(addPlayerToGame.addPlayer(gameId, userId)).rejects.toThrow(
             UserAlreadyInGame
+        );
+    });
+
+    test("game must still be pending", async () => {
+        const userId = (await userRepository.add(new User())).id;
+        const game = new Game();
+        for (let i = 0; i < 4; i++) {
+            game.addUser(`${i}`);
+        }
+        game.start();
+        const gameId = (await gameRepository.add(game)).id;
+
+        await expect(addPlayerToGame.addPlayer(gameId, userId)).rejects.toThrow(
+            GameAlreadyStarted
         );
     });
 

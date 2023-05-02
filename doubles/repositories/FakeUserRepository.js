@@ -41,7 +41,7 @@ exports.FakeUserRepository = class FakeUserRepository {
      * @returns {UserWithId}
      */
     #addIdToUser(user) {
-        user.id = `${this.#users.size}`;
+        user.id = `FakeID: ${this.#users.size}`;
         return /** @type {UserWithId} */ (user);
     }
 };

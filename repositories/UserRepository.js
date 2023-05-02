@@ -9,7 +9,7 @@
 /**
  * @typedef {Object} UserRepository
  * @property {(userId: string) => Promise<UserWithId | undefined>} get
- * @property {(user: UserWithId) => Promise<UserWithId>} add
+ * @property {(user: User) => Promise<UserWithId>} add
  *
  */
 

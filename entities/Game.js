@@ -4,18 +4,20 @@
 
 class Game {
     id;
-    #userIds;
+    /** @type {Map<string, UserInGame>} */
+    #users;
     #status;
 
     /**
      *
      * @param {string | undefined} id
-     * @param {Set<string>} userIds
+     * @param {UserInGame[]} users
      * @param {GameStatus} status
      */
-    constructor(id = undefined, userIds = new Set(), status = "pending") {
+    constructor(id = undefined, users = [], status = "pending") {
         this.id = id;
-        this.#userIds = userIds;
+        this.#users = new Map();
+        users.forEach((user) => this.#users.set(user.id(), user));
         this.#status = status;
     }
 
@@ -23,15 +25,17 @@ class Game {
      * @param {string} userId the id of the user to add to the game
      */
     addUser(userId) {
-        if (this.#userIds.has(userId)) return;
-        this.#userIds.add(userId);
+        if (this.#status !== "pending")
+            throw new GameAlreadyStarted(this.id || "");
+        if (this.hasUser(userId)) return;
+        this.#users.set(userId, new UserInGame(userId, AWAITING_START));
     }
 
     /**
-     * @returns {string[]} the ids of users ids that have been added to the game so far.
+     * @returns {UserInGame[]} the ids of users ids that have been added to the game so far.
      */
-    getUsers() {
-        return Array.from(this.#userIds);
+    users() {
+        return Array.from(this.#users.values());
     }
 
     /**
@@ -40,7 +44,16 @@ class Game {
      * @returns {boolean} `true` if the user is in the game, `false` otherwise.
      */
     hasUser(userId) {
-        return this.#userIds.has(userId);
+        return this.#users.has(userId);
+    }
+
+    /**
+     *
+     * @param {string} userId
+     * @returns {UserActivity | undefined}
+     */
+    userActivity(userId) {
+        return this.#users.get(userId)?.activity();
     }
 
     /**
@@ -53,13 +66,49 @@ class Game {
     start() {
         if (this.#status !== "pending")
             throw new GameAlreadyStarted(this.id || "");
-        if (this.#userIds.size < 4)
+        if (this.#users.size < 4)
             throw new NotEnoughPlayersToStartGame(
                 this.id || "",
-                this.#userIds.size
+                this.#users.size
             );
 
         this.#status = "started";
+        for (const user of this.#users.values()) {
+            this.#users.set(
+                user.id(),
+                new UserInGame(user.id(), STARTING_STORY)
+            );
+        }
+    }
+}
+
+const AWAITING_START = "awaiting-start";
+const STARTING_STORY = "starting-story";
+
+/**
+ * @typedef {typeof AWAITING_START | typeof STARTING_STORY} UserActivity
+ */
+
+class UserInGame {
+    #id;
+    #activity;
+
+    /**
+     *
+     * @param {string} id
+     * @param {UserActivity} activity
+     */
+    constructor(id, activity) {
+        this.#id = id;
+        this.#activity = activity;
+    }
+
+    id() {
+        return this.#id;
+    }
+
+    activity() {
+        return this.#activity;
     }
 }
 
@@ -87,4 +136,11 @@ class NotEnoughPlayersToStartGame extends Error {
     }
 }
 
-module.exports = { Game, GameAlreadyStarted, NotEnoughPlayersToStartGame };
+module.exports = {
+    Game,
+    UserInGame,
+    AWAITING_START,
+    STARTING_STORY,
+    GameAlreadyStarted,
+    NotEnoughPlayersToStartGame,
+};

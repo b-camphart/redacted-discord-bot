@@ -1,5 +1,6 @@
 const { Game } = require("../entities/Game");
 const { GameNotFound } = require("../repositories/GameRepository");
+const { PlayerActivityChanged } = require("./applicationEvents");
 const { UserNotInGame } = require("./validation");
 
 /**
@@ -48,11 +49,17 @@ class StartGameUseCase {
      * @param {import("../repositories/GameRepository").GameWithId} game
      */
     async #notifyPlayers(game) {
-        const notification = new GameStarted(game.id);
         const emissions = game
-            .getUsers()
-            .map((userId) =>
-                this.#playerNotifier.notifyPlayer(userId, notification)
+            .users()
+            .map((user) =>
+                this.#playerNotifier.notifyPlayer(
+                    user.id(),
+                    new PlayerActivityChanged(
+                        game.id,
+                        user.id(),
+                        user.activity()
+                    )
+                )
             );
         await Promise.allSettled(emissions);
     }
@@ -70,14 +77,4 @@ class StartGameUseCase {
     }
 }
 
-class GameStarted {
-    /**
-     *
-     * @param {string} gameId
-     */
-    constructor(gameId) {
-        this.gameId = gameId;
-    }
-}
-
-module.exports = { StartGameUseCase, GameStarted };
+module.exports = { StartGameUseCase };

@@ -9,12 +9,13 @@ const {
 const {
     NotEnoughPlayersToStartGame,
     GameAlreadyStarted,
+    STARTING_STORY,
 } = require("../../../entities/Game");
 const { GameNotFound } = require("../../../repositories/GameRepository");
+const { StartGameUseCase } = require("../../../usecases/StartGame");
 const {
-    StartGameUseCase,
-    GameStarted,
-} = require("../../../usecases/StartGame");
+    PlayerActivityChanged,
+} = require("../../../usecases/applicationEvents");
 const { UserNotInGame } = require("../../../usecases/validation");
 
 describe("Start Game", () => {
@@ -88,16 +89,29 @@ describe("Start Game", () => {
             expect(startedGame.status()).toBe("started");
         });
 
+        test("each player is starting a story", async () => {
+            const startedGame = await startGame.startGame(gameId, userId);
+            startedGame.users().forEach((userInGame) => {
+                expect(userInGame.activity()).toBe(STARTING_STORY);
+            });
+        });
+
         test("game is saved", async () => {
             const startedGame = await startGame.startGame(gameId, userId);
             expect(await gameRepository.get(gameId)).toBe(startedGame);
         });
 
-        test("all players are notified", async () => {
+        test("all players are notified of their activity change", async () => {
             await startGame.startGame(gameId, userId);
             expect(playerNotifierSpy.playersNotified).toHaveLength(4);
             playerNotifierSpy.playersNotified.forEach((log) => {
-                expect(log.notification).toEqual(new GameStarted(gameId));
+                expect(log.notification).toEqual(
+                    new PlayerActivityChanged(
+                        gameId,
+                        log.userId,
+                        STARTING_STORY
+                    )
+                );
             });
         });
     });
