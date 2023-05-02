@@ -7,6 +7,8 @@ class Game {
     /** @type {Map<string, UserInGame>} */
     #users;
     #status;
+    /** @type {Story[]} */
+    #stories;
 
     /**
      *
@@ -19,14 +21,14 @@ class Game {
         this.#users = new Map();
         users.forEach((user) => this.#users.set(user.id(), user));
         this.#status = status;
+        this.#stories = [];
     }
 
     /**
      * @param {string} userId the id of the user to add to the game
      */
     addUser(userId) {
-        if (this.#status !== "pending")
-            throw new GameAlreadyStarted(this.id || "");
+        if (this.#status !== "pending") throw new GameAlreadyStarted(this.id || "");
         if (this.hasUser(userId)) return;
         this.#users.set(userId, new UserInGame(userId, AWAITING_START));
     }
@@ -64,29 +66,49 @@ class Game {
     }
 
     start() {
-        if (this.#status !== "pending")
-            throw new GameAlreadyStarted(this.id || "");
-        if (this.#users.size < 4)
-            throw new NotEnoughPlayersToStartGame(
-                this.id || "",
-                this.#users.size
-            );
+        if (this.#status !== "pending") throw new GameAlreadyStarted(this.id || "");
+        if (this.#users.size < 4) throw new NotEnoughPlayersToStartGame(this.id || "", this.#users.size);
 
         this.#status = "started";
         for (const user of this.#users.values()) {
-            this.#users.set(
-                user.id(),
-                new UserInGame(user.id(), STARTING_STORY)
-            );
+            this.#users.set(user.id(), new UserInGame(user.id(), STARTING_STORY));
         }
+    }
+
+    /**
+     *
+     * @param {string} playerId
+     * @param {string} content
+     */
+    startStory(playerId, content) {
+        const player = this.#users.get(playerId);
+
+        if (player === undefined) throw new UserNotInGame(this.id || "", playerId);
+
+        if (player.activity() !== STARTING_STORY) throw new InvalidPlayerActivity();
+
+        this.#stories.push(new Story([content]));
+
+        this.#users.set(player.id(), new UserInGame(player.id(), AWAITING_STORY));
+    }
+
+    /**
+     *
+     * @param {number} storyIndex
+     * @param {number} entryIndex
+     * @return {string | undefined} The content of the entry of the story, or undefined if the story, or entry, are not in the game.
+     */
+    storyEntry(storyIndex, entryIndex) {
+        return this.#stories[storyIndex]?.entry(entryIndex);
     }
 }
 
 const AWAITING_START = "awaiting-start";
 const STARTING_STORY = "starting-story";
+const AWAITING_STORY = "awaiting-story";
 
 /**
- * @typedef {typeof AWAITING_START | typeof STARTING_STORY} PlayerActivity
+ * @typedef {typeof AWAITING_START | typeof STARTING_STORY | typeof AWAITING_STORY} PlayerActivity
  */
 
 class UserInGame {
@@ -109,6 +131,40 @@ class UserInGame {
 
     activity() {
         return this.#activity;
+    }
+}
+
+class Story {
+    #entries;
+
+    /**
+     *
+     * @param {string[]} entries
+     */
+    constructor(entries = []) {
+        this.#entries = entries;
+    }
+
+    /**
+     *
+     * @param {number} index
+     * @returns {string | undefined}
+     */
+    entry(index) {
+        return this.#entries[index];
+    }
+}
+
+class UserNotInGame extends Error {
+    /**
+     *
+     * @param {string} gameId
+     * @param {string} userId
+     */
+    constructor(gameId, userId) {
+        super();
+        this.gameId = gameId;
+        this.userId = userId;
     }
 }
 
@@ -136,11 +192,20 @@ class NotEnoughPlayersToStartGame extends Error {
     }
 }
 
+class InvalidPlayerActivity extends Error {
+    constructor() {
+        super();
+    }
+}
+
 module.exports = {
     Game,
     UserInGame,
     AWAITING_START,
     STARTING_STORY,
+    AWAITING_STORY,
+    UserNotInGame,
     GameAlreadyStarted,
     NotEnoughPlayersToStartGame,
+    InvalidPlayerActivity,
 };
