@@ -6,7 +6,7 @@ const {
 } = require("../../../doubles/repositories/FakeUserRepository");
 const {
     PlayerNotifierSpy,
-} = require("../../../doubles/repositories/PlayerNotifierSpy");
+} = require("../../../doubles/repositories/PlayerNotifierDoubles");
 const {
     makeAddPlayerToGame,
 } = require("../../../doubles/usecases/addPlayerToGame/addPlayerToGameFactory");

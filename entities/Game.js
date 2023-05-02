@@ -1,22 +1,22 @@
-exports.Game = class Game {
-    /** @type {string | undefined} */
+/**
+ * @typedef {"pending" | "started" | "ended"} GameStatus
+ */
+
+class Game {
     id;
     #userIds;
+    #status;
 
     /**
      *
-     * @param {object} init
-     * @param {string | undefined} init.id
-     * @param {Set<string>} init.userIds
+     * @param {string | undefined} id
+     * @param {Set<string>} userIds
+     * @param {GameStatus} status
      */
-    constructor(
-        { id = undefined, userIds = new Set() } = {
-            id: undefined,
-            userIds: new Set(),
-        }
-    ) {
+    constructor(id = undefined, userIds = new Set(), status = "pending") {
         this.id = id;
         this.#userIds = userIds;
+        this.#status = status;
     }
 
     /**
@@ -28,7 +28,7 @@ exports.Game = class Game {
     }
 
     /**
-     * @returns {string[]} the ids of users that have been added to the game so far.
+     * @returns {string[]} the ids of users ids that have been added to the game so far.
      */
     getUsers() {
         return Array.from(this.#userIds);
@@ -42,4 +42,49 @@ exports.Game = class Game {
     hasUser(userId) {
         return this.#userIds.has(userId);
     }
-};
+
+    /**
+     * @returns {GameStatus}
+     */
+    status() {
+        return this.#status;
+    }
+
+    start() {
+        if (this.#status !== "pending")
+            throw new GameAlreadyStarted(this.id || "");
+        if (this.#userIds.size < 4)
+            throw new NotEnoughPlayersToStartGame(
+                this.id || "",
+                this.#userIds.size
+            );
+
+        this.#status = "started";
+    }
+}
+
+class GameAlreadyStarted extends Error {
+    /**
+     *
+     * @param {string} gameId The id of the game that was attempted to be started.
+     */
+    constructor(gameId) {
+        super();
+        this.gameId = gameId;
+    }
+}
+
+class NotEnoughPlayersToStartGame extends Error {
+    /**
+     *
+     * @param {string} gameId The id of the game that was attempted to be started.
+     * @param {number} currentUserCount The current number of users in the game.
+     */
+    constructor(gameId, currentUserCount) {
+        super();
+        this.gameId = gameId;
+        this.currentUserCount = currentUserCount;
+    }
+}
+
+module.exports = { Game, GameAlreadyStarted, NotEnoughPlayersToStartGame };
