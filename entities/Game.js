@@ -2,6 +2,9 @@
  * @typedef {"pending" | "started" | "ended"} GameStatus
  */
 
+const { PlayerActivity } = require("./Game.PlayerActivity");
+const { StoryStatus } = require("./Game.StoryStatus");
+
 class Game {
     id;
     /** @type {Map<string, UserInGame>} */
@@ -30,7 +33,7 @@ class Game {
     addUser(userId) {
         if (this.#status !== "pending") throw new GameAlreadyStarted(this.id || "");
         if (this.hasUser(userId)) return;
-        this.#users.set(userId, new UserInGame(userId, AWAITING_START));
+        this.#users.set(userId, new UserInGame(userId, PlayerActivity.AwaitingStart));
     }
 
     /**
@@ -52,10 +55,20 @@ class Game {
     /**
      *
      * @param {string} userId
-     * @returns {PlayerActivity | undefined}
      */
     userActivity(userId) {
-        return this.#users.get(userId)?.activity();
+        const player = this.#users.get(userId);
+        if (player === undefined) return undefined;
+
+        if (this.#status === "pending") return PlayerActivity.AwaitingStart;
+
+        if (this.#stories.find((story) => story.startedBy() === userId) === undefined)
+            return PlayerActivity.StartingStory;
+
+        const storyForPlayer = this.#stories.find((story) => story.status().playerId === userId);
+        if (storyForPlayer === undefined) return PlayerActivity.AwaitingStory;
+
+        return storyForPlayer.status().toPlayerActivity(this.#stories.indexOf(storyForPlayer));
     }
 
     /**
@@ -71,7 +84,7 @@ class Game {
 
         this.#status = "started";
         for (const user of this.#users.values()) {
-            this.#users.set(user.id(), new UserInGame(user.id(), STARTING_STORY));
+            this.#users.set(user.id(), new UserInGame(user.id(), PlayerActivity.StartingStory));
         }
     }
 
@@ -85,11 +98,20 @@ class Game {
 
         if (player === undefined) throw new UserNotInGame(this.id || "", playerId);
 
-        if (player.activity() !== STARTING_STORY) throw new InvalidPlayerActivity();
+        if (this.userActivity(playerId) !== PlayerActivity.StartingStory) throw new InvalidPlayerActivity();
 
-        this.#stories.push(new Story([content]));
+        this.#stories.push(new Story([content], playerId, Array.from(this.#users.keys())));
 
-        this.#users.set(player.id(), new UserInGame(player.id(), AWAITING_STORY));
+        const storyForPlayer = this.#stories.find((story) => story.status().playerId === player.id());
+
+        let newActivity;
+        if (storyForPlayer !== undefined) {
+            newActivity = PlayerActivity.RedactingStory(this.#stories.indexOf(storyForPlayer));
+        } else {
+            newActivity = PlayerActivity.AwaitingStory;
+        }
+
+        this.#users.set(player.id(), new UserInGame(player.id(), newActivity));
     }
 
     /**
@@ -101,15 +123,15 @@ class Game {
     storyEntry(storyIndex, entryIndex) {
         return this.#stories[storyIndex]?.entry(entryIndex);
     }
+
+    /**
+     *
+     * @param {number} storyIndex
+     */
+    storyStatus(storyIndex) {
+        return this.#stories[storyIndex]?.status();
+    }
 }
-
-const AWAITING_START = "awaiting-start";
-const STARTING_STORY = "starting-story";
-const AWAITING_STORY = "awaiting-story";
-
-/**
- * @typedef {typeof AWAITING_START | typeof STARTING_STORY | typeof AWAITING_STORY} PlayerActivity
- */
 
 class UserInGame {
     #id;
@@ -118,7 +140,7 @@ class UserInGame {
     /**
      *
      * @param {string} id
-     * @param {PlayerActivity} activity
+     * @param {any} activity
      */
     constructor(id, activity) {
         this.#id = id;
@@ -128,21 +150,27 @@ class UserInGame {
     id() {
         return this.#id;
     }
-
-    activity() {
-        return this.#activity;
-    }
 }
 
 class Story {
     #entries;
+    #creatorId;
+    #nextPlayer;
 
     /**
      *
      * @param {string[]} entries
+     * @param {string} creatorId;
+     * @param {string[]} playerIds
      */
-    constructor(entries = []) {
+    constructor(entries = [], creatorId, playerIds) {
         this.#entries = entries;
+        this.#creatorId = creatorId;
+        this.#nextPlayer = playerIds[playerIds.indexOf(creatorId) + 1];
+    }
+
+    startedBy() {
+        return this.#creatorId;
     }
 
     /**
@@ -152,6 +180,10 @@ class Story {
      */
     entry(index) {
         return this.#entries[index];
+    }
+
+    status() {
+        return StoryStatus.Redact(this.#nextPlayer);
     }
 }
 
@@ -201,9 +233,6 @@ class InvalidPlayerActivity extends Error {
 module.exports = {
     Game,
     UserInGame,
-    AWAITING_START,
-    STARTING_STORY,
-    AWAITING_STORY,
     UserNotInGame,
     GameAlreadyStarted,
     NotEnoughPlayersToStartGame,

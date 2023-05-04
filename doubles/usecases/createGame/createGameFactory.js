@@ -1,19 +1,14 @@
-const {
-    CreateGameUseCase,
-} = require("../../../usecases/createGame/CreateGameUseCase");
+const CreateGameNamespace = require("../../../usecases/createGame/CreateGame");
 const { FakeGameRepository } = require("../../repositories/FakeGameRepository");
 const { FakeUserRepository } = require("../../repositories/FakeUserRepository");
 
 /**
  *
  * @param {object} repositories
- * @param {import("../../../repositories/UserRepository").UserRepository} repositories.users
- * @param {import("../../../repositories/GameRepository").GameRepository} repositories.games
- * @returns {import("../../../usecases/createGame/CreateGame").CreateGame}
+ * @param {CreateGameNamespace.UserRepository} repositories.users
+ * @param {CreateGameNamespace.GameRepository} repositories.games
+ * @returns {CreateGameNamespace.CreateGame}
  */
-exports.makeCreateGame = (
-    users = new FakeUserRepository(),
-    games = new FakeGameRepository()
-) => {
-    return new CreateGameUseCase(users, games);
+exports.makeCreateGame = (users = new FakeUserRepository(), games = new FakeGameRepository()) => {
+    return new CreateGameNamespace.CreateGame(users, games);
 };

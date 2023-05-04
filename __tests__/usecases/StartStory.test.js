@@ -1,14 +1,16 @@
 const { makeGame } = require("../../doubles/entities/makeGame");
 const { FakeGameRepository } = require("../../doubles/repositories/FakeGameRepository");
-const { InvalidPlayerActivity, UserNotInGame, Game, AWAITING_STORY } = require("../../entities/Game");
-const { GameNotFound } = require("../../repositories/GameRepository");
-const { StartStoryUseCase } = require("../../usecases/StartStory");
+const { InvalidPlayerActivity, UserNotInGame, Game } = require("../../entities/Game");
+const { PlayerActivity } = require("../../entities/Game.PlayerActivity");
+const { StoryStatus } = require("../../entities/Game.StoryStatus");
+const { GameNotFound } = require("../../repositories/GameRepositoryExceptions");
+const { StartStory } = require("../../usecases/StartStory");
 const { MustNotBeBlank, MustHaveLength } = require("../../usecases/validation");
 
 describe("Start Story", () => {
-    /** @type {import("../../usecases/StartStory").StartStory} */
+    /** @type {StartStory} */
     let startStory;
-    /** @type {import("../../repositories/GameRepository").GameRepository} */
+    /** @type {FakeGameRepository} */
     let gameRepository;
 
     beforeEach(() => {
@@ -22,7 +24,7 @@ describe("Start Story", () => {
     });
 
     describe("given the game exists", () => {
-        /** @type {import("../../repositories/GameRepository").GameWithId} */
+        /** @type {import("../../doubles/repositories/GameRepository").GameWithId} */
         let game;
         /**
          *
@@ -84,20 +86,34 @@ describe("Start Story", () => {
 
                 describe("given the provided content is valid", () => {
                     const content = "some content";
+                    beforeEach(async () => {
+                        await playerStartsStoryInGame(content);
+                    });
 
                     test("the game has a new story with the supplied content", async () => {
-                        const updatedGame = await playerStartsStoryInGame(content);
+                        const updatedGame = (await gameRepository.get(game.id)) || fail("Game was not saved");
                         expect(updatedGame.storyEntry(0, 0)).toBe(content);
                     });
 
                     test("the player is waiting for a story update", async () => {
-                        const updatedGame = await playerStartsStoryInGame(content);
-                        expect(updatedGame.userActivity(playerId)).toBe(AWAITING_STORY);
+                        const updatedGame = (await gameRepository.get(game.id)) || fail("Game was not saved");
+                        expect(updatedGame.userActivity(playerId)).toBe(PlayerActivity.AwaitingStory);
                     });
 
-                    test("the game is saved", async () => {
-                        const updatedGame = await playerStartsStoryInGame(content);
-                        expect(await gameRepository.get(game.id)).toEqual(updatedGame);
+                    test("the story needs the next player to redact the story", async () => {
+                        const updatedGame = (await gameRepository.get(game.id)) || fail("Game was not saved");
+                        expect(updatedGame.storyStatus(0)).toEqual(StoryStatus.Redact("player-3"));
+                    });
+
+                    describe("when the previous player starts their story in the game", () => {
+                        beforeEach(async () => {
+                            game.startStory("player-1", "content 1");
+                        });
+
+                        test("the player is redacting the other player's story", async () => {
+                            const updatedGame = (await gameRepository.get(game.id)) || fail("Game was not saved");
+                            expect(updatedGame.userActivity("player-2")).toEqual(PlayerActivity.RedactingStory(1));
+                        });
                     });
                 });
 
@@ -111,6 +127,18 @@ describe("Start Story", () => {
                         await expect(action).rejects.toThrow(InvalidPlayerActivity);
                     });
                 });
+
+                describe("given the player before already started their own story in the game", () => {
+                    beforeEach(async () => {
+                        game.startStory("player-1", "content 1");
+                    });
+
+                    test("the player is redacting the other player's story", async () => {
+                        await playerStartsStoryInGame("content 2");
+                        const updatedGame = (await gameRepository.get(game.id)) || fail("Game was not saved");
+                        expect(updatedGame.userActivity("player-2")).toEqual(PlayerActivity.RedactingStory(0));
+                    });
+                });
             });
         });
     });
@@ -118,11 +146,11 @@ describe("Start Story", () => {
 
 /**
  *
- * @param {import("../../repositories/GameRepository").GameRepository} gameRepository
- * @returns {import("../../usecases/StartStory").StartStory}
+ * @param {import("../../usecases/StartStory").GameRepository} gameRepository
+ * @returns {StartStory}
  */
 const makeStartStory = (gameRepository = new FakeGameRepository()) => {
-    return new StartStoryUseCase(gameRepository);
+    return new StartStory(gameRepository);
 };
 
 exports.makeStartStory = makeStartStory;

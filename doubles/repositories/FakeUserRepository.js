@@ -1,5 +1,5 @@
-/** @typedef {import("../../repositories/UserRepository").UserRepository} UserRepository */
-/** @typedef {import("../../repositories/UserRepository").UserWithId} UserWithId */
+/** @typedef {import("./UserRepository").UserRepository} UserRepository */
+/** @typedef {import("./UserRepository").UserWithId} UserWithId */
 
 const { User } = require("../../entities/User");
 

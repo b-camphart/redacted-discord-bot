@@ -1,34 +1,21 @@
-const {
-    FakeGameRepository,
-} = require("../../../doubles/repositories/FakeGameRepository");
-const {
-    FakeUserRepository,
-} = require("../../../doubles/repositories/FakeUserRepository");
-const {
-    PlayerNotifierSpy,
-} = require("../../../doubles/repositories/PlayerNotifierDoubles");
-const {
-    makeAddPlayerToGame,
-} = require("../../../doubles/usecases/addPlayerToGame/addPlayerToGameFactory");
-const { Game, GameAlreadyStarted } = require("../../../entities/Game");
-const { User } = require("../../../entities/User");
-const { GameNotFound } = require("../../../repositories/GameRepository");
-const { UserNotFound } = require("../../../repositories/UserRepository");
-const {
-    AddPlayerToGameUseCase,
-} = require("../../../usecases/addPlayerToGame/AddPlayerToGameUseCase");
-const {
-    PlayerAddedToGame,
-} = require("../../../usecases/addPlayerToGame/PlayerAddedToGame");
-const {
-    UserAlreadyInGame,
-} = require("../../../usecases/addPlayerToGame/UserAlreadyInGame");
+const { FakeGameRepository } = require("../../doubles/repositories/FakeGameRepository");
+const { FakeUserRepository } = require("../../doubles/repositories/FakeUserRepository");
+const { PlayerNotifierSpy } = require("../../doubles/repositories/PlayerNotifierDoubles");
+const { makeAddPlayerToGame } = require("../../doubles/usecases/addPlayerToGame/addPlayerToGameFactory");
+const { Game, GameAlreadyStarted } = require("../../entities/Game");
+const { User } = require("../../entities/User");
+const { GameNotFound } = require("../../repositories/GameRepositoryExceptions");
+const { UserNotFound } = require("../../repositories/UserRepositoryExceptions");
+const { AddPlayerToGame } = require("../../usecases/addPlayerToGame/AddPlayerToGame");
+const { PlayerAddedToGame } = require("../../usecases/addPlayerToGame/PlayerAddedToGame");
+const { UserAlreadyInGame } = require("../../usecases/addPlayerToGame/UserAlreadyInGame");
 
 describe("AddPlayerToGame", () => {
-    /** @type {import("../../../usecases/addPlayerToGame/AddPlayerToGame").AddPlayerToGame} */
+    /** @type {AddPlayerToGame} */
     let addPlayerToGame;
+    /** @type {FakeGameRepository} */
     let gameRepository;
-    /** @type {import("../../../repositories/UserRepository").UserRepository} */
+    /** @type {FakeUserRepository} */
     let userRepository;
     /** @type {PlayerNotifierSpy} */
     let playerNotifierSpy;
@@ -37,25 +24,17 @@ describe("AddPlayerToGame", () => {
         gameRepository = new FakeGameRepository();
         userRepository = new FakeUserRepository();
         playerNotifierSpy = new PlayerNotifierSpy();
-        addPlayerToGame = makeAddPlayerToGame(
-            gameRepository,
-            userRepository,
-            playerNotifierSpy
-        );
+        addPlayerToGame = makeAddPlayerToGame(gameRepository, userRepository, playerNotifierSpy);
     });
 
     test("game must exist", async () => {
         const userId = "user-id";
-        await expect(
-            addPlayerToGame.addPlayer("unknown-game-id", userId)
-        ).rejects.toThrow(GameNotFound);
+        await expect(addPlayerToGame.addPlayer("unknown-game-id", userId)).rejects.toThrow(GameNotFound);
     });
 
     test("user must exist", async () => {
         const gameId = (await gameRepository.add(new Game())).id;
-        await expect(
-            addPlayerToGame.addPlayer(gameId, "unknown-user-id")
-        ).rejects.toThrow(UserNotFound);
+        await expect(addPlayerToGame.addPlayer(gameId, "unknown-user-id")).rejects.toThrow(UserNotFound);
     });
 
     test("user must not already be in the game", async () => {
@@ -64,9 +43,7 @@ describe("AddPlayerToGame", () => {
         game.addUser(userId);
         const gameId = (await gameRepository.add(game)).id;
 
-        await expect(addPlayerToGame.addPlayer(gameId, userId)).rejects.toThrow(
-            UserAlreadyInGame
-        );
+        await expect(addPlayerToGame.addPlayer(gameId, userId)).rejects.toThrow(UserAlreadyInGame);
     });
 
     test("game must still be pending", async () => {
@@ -78,9 +55,7 @@ describe("AddPlayerToGame", () => {
         game.start();
         const gameId = (await gameRepository.add(game)).id;
 
-        await expect(addPlayerToGame.addPlayer(gameId, userId)).rejects.toThrow(
-            GameAlreadyStarted
-        );
+        await expect(addPlayerToGame.addPlayer(gameId, userId)).rejects.toThrow(GameAlreadyStarted);
     });
 
     test("adds the user to the game", async () => {

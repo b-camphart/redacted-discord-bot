@@ -1,4 +1,5 @@
-const { Game, UserInGame, AWAITING_START } = require("../../entities/Game");
+const { Game, UserInGame } = require("../../entities/Game");
+const { PlayerActivity } = require("../../entities/Game.PlayerActivity");
 
 /**
  *
@@ -6,14 +7,12 @@ const { Game, UserInGame, AWAITING_START } = require("../../entities/Game");
  * @param {string | undefined} [params.id]
  * @param {Set<string>} [params.userIds]
  * @param {import("../../entities/Game").GameStatus} [params.status]
- * @returns
+ * @returns {Game}
  */
 exports.makeGame = (params = {}) => {
     return new Game(
         params.id || undefined,
-        Array.from(params.userIds || new Set()).map(
-            (userId) => new UserInGame(userId, AWAITING_START)
-        ),
+        Array.from(params.userIds || new Set()).map((userId) => new UserInGame(userId, PlayerActivity.AwaitingStart)),
         params.status || "pending"
     );
 };

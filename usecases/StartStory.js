@@ -1,21 +1,23 @@
 const { Game } = require("../entities/Game");
-const { GameNotFound } = require("../repositories/GameRepository");
+const { GameNotFound } = require("../repositories/GameRepositoryExceptions");
 const { MustNotBeBlank, MustHaveLength, isStringBlank } = require("./validation");
 
 /**
- * @typedef {Object} StartStory
- * @property {(gameId: string, playerId: string, content: string) => Promise<Game>} startStory
+ * @typedef {Game & { id: string }} GameWithId
  */
 
 /**
- * @implements {StartStory}
+ * @typedef {Object} GameRepository
+ * @property {(gameId: string) => Promise<GameWithId | undefined>} get
+ * @property {(game: GameWithId) => Promise<void>} replace
  */
-class StartStoryUseCase {
+
+class StartStory {
     #gameRepository;
 
     /**
      *
-     * @param {import("../repositories/GameRepository").GameRepository} gameRepository
+     * @param {GameRepository} gameRepository
      */
     constructor(gameRepository) {
         this.#gameRepository = gameRepository;
@@ -26,7 +28,6 @@ class StartStoryUseCase {
      * @param {string} gameId
      * @param {string} playerId
      * @param {string} content
-     * @return {Promise<Game>}
      */
     async startStory(gameId, playerId, content) {
         const game = await this.#gameRepository.get(gameId);
@@ -42,4 +43,4 @@ class StartStoryUseCase {
         return game;
     }
 }
-module.exports = { StartStoryUseCase };
+module.exports = { StartStory };

@@ -1,24 +1,24 @@
-const { Game } = require("../entities/Game");
-const { GameNotFound } = require("../repositories/GameRepository");
+const { Game, UserNotInGame } = require("../entities/Game");
+const { GameNotFound } = require("../repositories/GameRepositoryExceptions");
 const { PlayerActivityChanged } = require("./applicationEvents");
-const { UserNotInGame } = require("./validation");
 
 /**
- * @interface
- * @typedef {Object} StartGame
- * @property {(gameId: string, playerId: string) => Promise<Game>} startGame
+ * @typedef {Game & { id: string }} GameWithId
  */
 
 /**
- * @implements {StartGame}
+ * @typedef {Object} GameRepository
+ * @property {(gameId: string) => Promise<GameWithId | undefined>} get
+ * @property {(game: GameWithId) => Promise<void>} replace
  */
-class StartGameUseCase {
+
+class StartGame {
     #gameRepository;
     #playerNotifier;
 
     /**
      *
-     * @param {import("../repositories/GameRepository").GameRepository} gameRepository
+     * @param {GameRepository} gameRepository
      * @param {import("../repositories/PlayerNotifier").PlayerNotifier} playerNotifier
      */
     constructor(gameRepository, playerNotifier) {
@@ -46,28 +46,21 @@ class StartGameUseCase {
 
     /**
      *
-     * @param {import("../repositories/GameRepository").GameWithId} game
+     * @param {GameWithId} game
      */
     async #notifyPlayers(game) {
-        const emissions = game
-            .users()
-            .map((user) =>
-                this.#playerNotifier.notifyPlayer(
-                    user.id(),
-                    new PlayerActivityChanged(
-                        game.id,
-                        user.id(),
-                        user.activity()
-                    )
-                )
-            );
+        const emissions = game.users().map((user) => {
+            const activity = game.userActivity(user.id());
+            if (activity === undefined) throw "Activity for user in game is undefined.";
+            this.#playerNotifier.notifyPlayer(user.id(), new PlayerActivityChanged(game.id, user.id(), activity));
+        });
         await Promise.allSettled(emissions);
     }
 
     /**
      *
      * @param {string} gameId
-     * @returns {Promise<import("./addPlayerToGame/AddPlayerToGameUseCase").GameWithId>}
+     * @returns {Promise<GameWithId>}
      * @throws {GameNotFound} if the game does not exist
      */
     async #getGame(gameId) {
@@ -77,4 +70,4 @@ class StartGameUseCase {
     }
 }
 
-module.exports = { StartGameUseCase };
+module.exports = { StartGame };
