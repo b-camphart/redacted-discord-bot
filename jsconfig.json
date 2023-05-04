@@ -1,0 +1,19 @@
+{
+    "compilerOptions": {
+        "strict": true,
+        "checkJs": true,
+        "allowJs": true,
+        "declaration": true,
+        "target": "ES2020",
+        "module": "CommonJS"
+    },
+    "include": [
+        "__tests__/**/*.js",
+        "doubles/**/*.js",
+        "entities/**/*.js",
+        "repositories/**/*.js",
+        "usecases/**/*.js",
+        "server.js"
+    ],
+    "exclude": ["node_modules"]
+}
