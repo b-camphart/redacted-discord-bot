@@ -53,7 +53,9 @@ class Repair extends StoryStatusImpl {
         this.playerId = playerId;
         this.redaction = {
             type: redaction.type,
+            // @ts-ignore
             wordIndices: redaction.wordIndices || undefined,
+            // @ts-ignore
             count: redaction.count || undefined,
         };
     }

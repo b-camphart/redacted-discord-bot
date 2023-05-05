@@ -6,7 +6,7 @@ const { MustHaveLength, IndexOutOfBounds } = require("./validation");
 /**
  * @typedef {Object} GameRepository
  * @property {(gameId: string) => Promise<Game & { id: string} | undefined>} get
- * @prop {(game: Game) => Promise<void>} replace
+ * @prop {(game: Game & { id: string}) => Promise<void>} replace
  */
 
 exports.RedactStory = class RedactStory {

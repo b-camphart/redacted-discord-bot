@@ -154,7 +154,7 @@ class Game {
         const words = entry.split(" ");
 
         wordIndices.forEach((wordIndex) => {
-            if (wordIndex < 0 || wordIndex >= words.length) throw new IndexOutOfBounds();
+            if (wordIndex < 0 || wordIndex >= words.length) throw new IndexOutOfBounds("");
         });
 
         story.censor(playerId, wordIndices);
