@@ -16,16 +16,18 @@ class Game {
 
     /**
      *
-     * @param {string | undefined} id
-     * @param {string[]} users
-     * @param {GameStatus} status
-     * @param {{creatorId: string, entries: string[], status: StoryStatus}[]} stories
+     * @param {string | undefined} [id]
+     * @param {string[]} [users]
+     * @param {GameStatus} [status]
+     * @param {{creatorId: string, entries: string[], status: StoryStatus}[]} [stories]
+     * @param {number} [maxStoryEntries]
      */
-    constructor(id = undefined, users = [], status = "pending", stories = []) {
+    constructor(id = undefined, users = [], status = "pending", stories = [], maxStoryEntries = 6) {
         this.id = id;
         this.#users = Array.from(users);
         this.#status = status;
         this.#stories = stories.map((story) => new Story(story.entries, story.creatorId, this.#users, story.status));
+        this.maxStoryEntries = maxStoryEntries;
     }
 
     /**
@@ -41,7 +43,8 @@ class Game {
      * @returns {string[]} the ids of users ids that have been added to the game so far.
      */
     users() {
-        return Array.from(this.#users);
+        const usersCopy = Array.from(this.#users);
+        return usersCopy;
     }
 
     /**
@@ -130,12 +133,16 @@ class Game {
      *
      * @param {string} playerId
      * @param {number} storyIndex
+     * @param {string} action
+     * @return {Story}
      */
-    #ensurePlayerCanRedactStory(playerId, storyIndex) {
-        const activity = this.userActivity(playerId);
-        if (activity === undefined) throw new UserNotInGame(this.id || "", playerId);
-        const requiredActivity = PlayerActivity.RedactingStory(storyIndex);
-        if (!isSameActivity(activity, requiredActivity)) throw new InvalidPlayerActivity(activity, requiredActivity);
+    #ensurePlayerCanPerformActionOnStory(playerId, storyIndex, action) {
+        if (!this.hasUser(playerId)) throw new UserNotInGame(this.id || "", playerId);
+        const story = this.#stories[storyIndex];
+        if (story === undefined) throw new InvalidPlayerActivity();
+        if (story.status().playerId !== playerId || story.status().status !== action) throw new InvalidPlayerActivity();
+
+        return story;
     }
 
     /**
@@ -145,10 +152,8 @@ class Game {
      * @param {number[]} wordIndices
      */
     censorStory(playerId, storyIndex, wordIndices) {
-        this.#ensurePlayerCanRedactStory(playerId, storyIndex);
+        const story = this.#ensurePlayerCanPerformActionOnStory(playerId, storyIndex, "redact");
 
-        const story = this.#stories[storyIndex];
-        if (story === undefined) return;
         const entry = story.entry(0);
         if (entry === undefined) return;
         const words = entry.split(" ");
@@ -167,9 +172,8 @@ class Game {
      * @param {number} truncationCount
      */
     truncateStory(playerId, storyIndex, truncationCount) {
-        this.#ensurePlayerCanRedactStory(playerId, storyIndex);
-        const story = this.#stories[storyIndex];
-        if (story === undefined) return;
+        const story = this.#ensurePlayerCanPerformActionOnStory(playerId, storyIndex, "redact");
+
         const entry = story.entry(0);
         if (entry === undefined) return;
         const words = entry.split(" ");
@@ -177,6 +181,17 @@ class Game {
         if (truncationCount >= words.length) throw new IndexOutOfBounds("truncationCount must be less than 5.");
 
         story.truncate(playerId, truncationCount);
+    }
+
+    /**
+     *
+     * @param {string} playerId
+     * @param {number} storyIndex
+     */
+    repairStory(playerId, storyIndex) {
+        const story = this.#ensurePlayerCanPerformActionOnStory(playerId, storyIndex, "repair");
+
+        story.repair(this.maxStoryEntries);
     }
 }
 
@@ -202,7 +217,7 @@ class UserInGame {
 class Story {
     #entries;
     #creatorId;
-    #nextPlayer;
+    #player;
     #playerIds;
     #status;
 
@@ -217,12 +232,8 @@ class Story {
         this.#entries = entries;
         this.#creatorId = creatorId;
         this.#playerIds = playerIds;
-        const nextPlayerIndex = playerIds.indexOf(creatorId) + 1;
-        if (nextPlayerIndex === playerIds.length) this.#nextPlayer = playerIds[0];
-        else {
-            this.#nextPlayer = playerIds[nextPlayerIndex];
-        }
-        this.#status = status || StoryStatus.Redact(this.#nextPlayer);
+        this.#player = status?.playerId || this.#getNextPlayer(creatorId);
+        this.#status = status || StoryStatus.Redact(this.#player);
     }
 
     startedBy() {
@@ -248,16 +259,28 @@ class Story {
 
     /**
      *
+     * @param {string} currentPlayerId
+     * @returns {string}
+     */
+    #getNextPlayer(currentPlayerId) {
+        const currentPlayerIndex = this.#playerIds.indexOf(currentPlayerId);
+        const nextPlayerIndex = currentPlayerIndex + 1;
+        let nextPlayerId;
+        if (nextPlayerIndex === this.#playerIds.length) nextPlayerId = this.#playerIds[0];
+        else {
+            nextPlayerId = this.#playerIds[nextPlayerIndex];
+        }
+        return nextPlayerId;
+    }
+
+    /**
+     *
      * @param {string} playerId
      * @param {number[]} wordIndices
      */
     censor(playerId, wordIndices) {
-        const nextPlayerIndex = this.#playerIds.indexOf(this.#nextPlayer) + 1;
-        if (nextPlayerIndex === this.#playerIds.length) this.#nextPlayer = this.#playerIds[0];
-        else {
-            this.#nextPlayer = this.#playerIds[nextPlayerIndex];
-        }
-        this.#status = StoryStatus.RepairCensor(this.#nextPlayer, wordIndices);
+        this.#player = this.#getNextPlayer(this.#player);
+        this.#status = StoryStatus.RepairCensor(this.#player, wordIndices);
     }
 
     /**
@@ -266,12 +289,22 @@ class Story {
      * @param {number} truncationCount
      */
     truncate(playerId, truncationCount) {
-        const nextPlayerIndex = this.#playerIds.indexOf(this.#nextPlayer) + 1;
-        if (nextPlayerIndex === this.#playerIds.length) this.#nextPlayer = this.#playerIds[0];
-        else {
-            this.#nextPlayer = this.#playerIds[nextPlayerIndex];
+        this.#player = this.#getNextPlayer(this.#player);
+        this.#status = StoryStatus.RepairTruncation(this.#player, truncationCount);
+    }
+
+    /**
+     *
+     * @param {number} maxEntries
+     */
+    repair(maxEntries) {
+        this.#player = this.#getNextPlayer(this.#player);
+        console.log("max entries: ", maxEntries, "entries: ", this.#entries.length);
+        if (this.#entries.length === maxEntries) {
+            this.#status = StoryStatus.Completed;
+        } else {
+            this.#status = StoryStatus.Continue(this.#player);
         }
-        this.#status = StoryStatus.RepairTruncation(this.#nextPlayer, truncationCount);
     }
 }
 

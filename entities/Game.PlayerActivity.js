@@ -32,6 +32,17 @@ exports.PlayerActivity = Object.freeze({
             storyIndex,
         });
     },
+
+    /**
+     *
+     * @param {number} storyIndex
+     */
+    ContinuingStory: (storyIndex) => {
+        return Object.freeze({
+            activity: "continuing-story",
+            storyIndex,
+        });
+    },
 });
 
 /**

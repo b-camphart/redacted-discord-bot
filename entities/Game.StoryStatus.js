@@ -30,7 +30,6 @@ class Redact extends StoryStatusImpl {
      */
     constructor(playerId) {
         super("redact", playerId);
-        this.playerId = playerId;
     }
     /**
      *  @param {number} storyIndex
@@ -50,7 +49,6 @@ class Repair extends StoryStatusImpl {
      */
     constructor(playerId, redaction) {
         super("repair", playerId);
-        this.playerId = playerId;
         this.redaction = {
             type: redaction.type,
             // @ts-ignore
@@ -66,6 +64,36 @@ class Repair extends StoryStatusImpl {
      */
     toPlayerActivity(storyIndex) {
         return PlayerActivity.RepairingStory(storyIndex);
+    }
+}
+
+class Continue extends StoryStatusImpl {
+    /**
+     *
+     * @param {string} playerId
+     */
+    constructor(playerId) {
+        super("continue", playerId);
+    }
+    /**
+     *  @param {number} storyIndex
+     * @returns {{ activity: string }}
+     */
+    toPlayerActivity(storyIndex) {
+        return PlayerActivity.ContinuingStory(storyIndex);
+    }
+}
+
+class Completed extends StoryStatusImpl {
+    constructor() {
+        super("completed", "");
+    }
+    /**
+     *  @param {number} storyIndex
+     * @returns {{ activity: string }}
+     */
+    toPlayerActivity(storyIndex) {
+        throw "No corresponding activity";
     }
 }
 
@@ -96,4 +124,15 @@ exports.StoryStatus = {
     RepairCensor: (playerId, wordIndices) => {
         return new Repair(playerId, { type: "censor", wordIndices });
     },
+
+    /**
+     *
+     * @param {string} playerId
+     * @returns {StoryStatus}
+     */
+    Continue: (playerId) => {
+        return new Continue(playerId);
+    },
+
+    Completed: new Completed(),
 };
