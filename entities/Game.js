@@ -2,7 +2,8 @@
  * @typedef {"pending" | "started" | "ended"} GameStatus
  */
 
-const { PlayerActivity } = require("./Game.PlayerActivity");
+const { IndexOutOfBounds } = require("../usecases/validation");
+const { PlayerActivity, isSameActivity } = require("./Game.PlayerActivity");
 const { StoryStatus } = require("./Game.StoryStatus");
 
 class Game {
@@ -131,6 +132,31 @@ class Game {
     storyStatus(storyIndex) {
         return this.#stories[storyIndex]?.status();
     }
+
+    /**
+     *
+     * @param {string} playerId
+     * @param {number} storyIndex
+     * @param {number[]} wordIndices
+     */
+    censorStory(playerId, storyIndex, wordIndices) {
+        const activity = this.userActivity(playerId);
+        if (activity === undefined) throw new UserNotInGame(this.id || "", playerId);
+        const requiredActivity = PlayerActivity.RedactingStory(storyIndex);
+        if (!isSameActivity(activity, requiredActivity)) throw new InvalidPlayerActivity(activity, requiredActivity);
+
+        const story = this.#stories[storyIndex];
+        if (story === undefined) return;
+        const entry = story.entry(0);
+        if (entry === undefined) return;
+        const words = entry.split(" ");
+
+        wordIndices.forEach((wordIndex) => {
+            if (wordIndex < 0 || wordIndex >= words.length) throw new IndexOutOfBounds();
+        });
+
+        story.censor(playerId, wordIndices);
+    }
 }
 
 class UserInGame {
@@ -156,6 +182,8 @@ class Story {
     #entries;
     #creatorId;
     #nextPlayer;
+    #playerIds;
+    #status;
 
     /**
      *
@@ -166,7 +194,13 @@ class Story {
     constructor(entries = [], creatorId, playerIds) {
         this.#entries = entries;
         this.#creatorId = creatorId;
-        this.#nextPlayer = playerIds[playerIds.indexOf(creatorId) + 1];
+        this.#playerIds = playerIds;
+        const nextPlayerIndex = playerIds.indexOf(creatorId) + 1;
+        if (nextPlayerIndex === playerIds.length) this.#nextPlayer = playerIds[0];
+        else {
+            this.#nextPlayer = playerIds[nextPlayerIndex];
+        }
+        this.#status = StoryStatus.Redact(this.#nextPlayer);
     }
 
     startedBy() {
@@ -183,7 +217,21 @@ class Story {
     }
 
     status() {
-        return StoryStatus.Redact(this.#nextPlayer);
+        return this.#status;
+    }
+
+    /**
+     *
+     * @param {string} playerId
+     * @param {number[]} wordIndices
+     */
+    censor(playerId, wordIndices) {
+        const nextPlayerIndex = this.#playerIds.indexOf(this.#nextPlayer) + 1;
+        if (nextPlayerIndex === this.#playerIds.length) this.#nextPlayer = this.#playerIds[0];
+        else {
+            this.#nextPlayer = this.#playerIds[nextPlayerIndex];
+        }
+        this.#status = StoryStatus.Repair(this.#nextPlayer, wordIndices);
     }
 }
 
@@ -194,7 +242,7 @@ class UserNotInGame extends Error {
      * @param {string} userId
      */
     constructor(gameId, userId) {
-        super();
+        super(`User ${userId} not in game ${gameId}`);
         this.gameId = gameId;
         this.userId = userId;
     }
@@ -225,8 +273,17 @@ class NotEnoughPlayersToStartGame extends Error {
 }
 
 class InvalidPlayerActivity extends Error {
-    constructor() {
-        super();
+    /**
+     *
+     * @param {any} [currentActivity]
+     * @param {any} [requiredActivity]
+     */
+    constructor(currentActivity, requiredActivity) {
+        super(
+            `Player currently has ${JSON.stringify(currentActivity)}, but ${JSON.stringify(
+                requiredActivity
+            )} was required`
+        );
     }
 }
 

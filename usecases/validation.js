@@ -32,3 +32,9 @@ exports.MustHaveLength = class MustHaveLength extends Error {
         this.max = max;
     }
 };
+
+exports.IndexOutOfBounds = class IndexOutOfBounds extends Error {
+    constructor() {
+        super();
+    }
+};

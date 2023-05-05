@@ -28,7 +28,7 @@ exports.FakeGameRepository = class FakeGameRepository {
      * @returns {Promise<GameWithId>}
      */
     async add(game) {
-        game.id = `${this.#games.size}`;
+        game.id = `FakeGame: ${this.#games.size}`;
         const gameWithId = /** @type {GameWithId} */ (game);
         this.#games.set(game.id, gameWithId);
         return gameWithId;
