@@ -33,7 +33,7 @@ describe("Start Game", () => {
     });
 
     test("game must have at least 4 players", async () => {
-        const gameId = (await gameRepository.add(makeGame({ userIds: new Set([userId]) }))).id;
+        const gameId = (await gameRepository.add(makeGame({ userIds: [userId] }))).id;
 
         await expect(startGame.startGame(gameId, userId)).rejects.toThrow(NotEnoughPlayersToStartGame);
     });
@@ -42,7 +42,7 @@ describe("Start Game", () => {
         const gameId = (
             await gameRepository.add(
                 makeGame({
-                    userIds: new Set([userId, "2", "3", "4"]),
+                    userIds: [userId, "2", "3", "4"],
                     status: "started",
                 })
             )
@@ -56,7 +56,7 @@ describe("Start Game", () => {
         let gameId;
 
         beforeEach(async () => {
-            gameId = (await gameRepository.add(makeGame({ userIds: new Set([userId, "2", "3", "4"]) }))).id;
+            gameId = (await gameRepository.add(makeGame({ userIds: [userId, "2", "3", "4"] }))).id;
         });
 
         test("game is started", async () => {
@@ -66,14 +66,14 @@ describe("Start Game", () => {
 
         test("each player is starting a story", async () => {
             const startedGame = await startGame.startGame(gameId, userId);
-            startedGame.users().forEach((userInGame) => {
-                expect(startedGame.userActivity(userInGame.id())).toBe(PlayerActivity.StartingStory);
+            startedGame.users().forEach((userIdInGame) => {
+                expect(startedGame.userActivity(userIdInGame)).toBe(PlayerActivity.StartingStory);
             });
         });
 
         test("game is saved", async () => {
             const startedGame = await startGame.startGame(gameId, userId);
-            expect(await gameRepository.get(gameId)).toBe(startedGame);
+            expect(await gameRepository.get(gameId)).toEqual(startedGame);
         });
 
         test("all players are notified of their activity change", async () => {

@@ -19,7 +19,10 @@ exports.FakeGameRepository = class FakeGameRepository {
      * @param {string} gameId
      */
     async get(gameId) {
-        return this.#games.get(gameId);
+        const storedGame = this.#games.get(gameId);
+        if (storedGame === undefined) return undefined;
+        const gameCopy = new Game(gameId, storedGame.users(), storedGame.status(), storedGame.stories());
+        return /** @type {GameWithId} */ (gameCopy);
     }
 
     /**

@@ -45,12 +45,17 @@ class Repair extends StoryStatusImpl {
     /**
      *
      * @param {string} playerId
-     * @param {number[]} censoredWordIndices
+     * @param {{ type: "censor", wordIndices: number[] } | { type: "truncate", count: number }} redaction
+     *
      */
-    constructor(playerId, censoredWordIndices) {
+    constructor(playerId, redaction) {
         super("repair", playerId);
         this.playerId = playerId;
-        this.censoredWordIndices = censoredWordIndices;
+        this.redaction = {
+            type: redaction.type,
+            wordIndices: redaction.wordIndices || undefined,
+            count: redaction.count || undefined,
+        };
     }
 
     /**
@@ -74,10 +79,19 @@ exports.StoryStatus = {
     /**
      *
      * @param {string} playerId
-     * @param {number[]} censoredWordIndices
+     * @param {number} count
      * @returns {StoryStatus}
      */
-    Repair: (playerId, censoredWordIndices) => {
-        return new Repair(playerId, censoredWordIndices);
+    RepairTruncation: (playerId, count) => {
+        return new Repair(playerId, { type: "truncate", count });
+    },
+    /**
+     *
+     * @param {string} playerId
+     * @param {number[]} wordIndices
+     * @returns {StoryStatus}
+     */
+    RepairCensor: (playerId, wordIndices) => {
+        return new Repair(playerId, { type: "censor", wordIndices });
     },
 };

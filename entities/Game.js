@@ -8,7 +8,7 @@ const { StoryStatus } = require("./Game.StoryStatus");
 
 class Game {
     id;
-    /** @type {Map<string, UserInGame>} */
+    /** @type {string[]} */
     #users;
     #status;
     /** @type {Story[]} */
@@ -17,15 +17,15 @@ class Game {
     /**
      *
      * @param {string | undefined} id
-     * @param {UserInGame[]} users
+     * @param {string[]} users
      * @param {GameStatus} status
+     * @param {{creatorId: string, entries: string[], status: StoryStatus}[]} stories
      */
-    constructor(id = undefined, users = [], status = "pending") {
+    constructor(id = undefined, users = [], status = "pending", stories = []) {
         this.id = id;
-        this.#users = new Map();
-        users.forEach((user) => this.#users.set(user.id(), user));
+        this.#users = Array.from(users);
         this.#status = status;
-        this.#stories = [];
+        this.#stories = stories.map((story) => new Story(story.entries, story.creatorId, this.#users, story.status));
     }
 
     /**
@@ -34,14 +34,14 @@ class Game {
     addUser(userId) {
         if (this.#status !== "pending") throw new GameAlreadyStarted(this.id || "");
         if (this.hasUser(userId)) return;
-        this.#users.set(userId, new UserInGame(userId, PlayerActivity.AwaitingStart));
+        this.#users.push(userId);
     }
 
     /**
-     * @returns {UserInGame[]} the ids of users ids that have been added to the game so far.
+     * @returns {string[]} the ids of users ids that have been added to the game so far.
      */
     users() {
-        return Array.from(this.#users.values());
+        return Array.from(this.#users);
     }
 
     /**
@@ -50,7 +50,7 @@ class Game {
      * @returns {boolean} `true` if the user is in the game, `false` otherwise.
      */
     hasUser(userId) {
-        return this.#users.has(userId);
+        return this.#users.find((id) => id === userId) !== undefined;
     }
 
     /**
@@ -58,8 +58,7 @@ class Game {
      * @param {string} userId
      */
     userActivity(userId) {
-        const player = this.#users.get(userId);
-        if (player === undefined) return undefined;
+        if (!this.hasUser(userId)) return undefined;
 
         if (this.#status === "pending") return PlayerActivity.AwaitingStart;
 
@@ -79,14 +78,21 @@ class Game {
         return this.#status;
     }
 
+    stories() {
+        return this.#stories.map((story) => {
+            return {
+                creatorId: story.startedBy(),
+                entries: story.entries(),
+                status: story.status(),
+            };
+        });
+    }
+
     start() {
         if (this.#status !== "pending") throw new GameAlreadyStarted(this.id || "");
-        if (this.#users.size < 4) throw new NotEnoughPlayersToStartGame(this.id || "", this.#users.size);
+        if (this.#users.length < 4) throw new NotEnoughPlayersToStartGame(this.id || "", this.#users.length);
 
         this.#status = "started";
-        for (const user of this.#users.values()) {
-            this.#users.set(user.id(), new UserInGame(user.id(), PlayerActivity.StartingStory));
-        }
     }
 
     /**
@@ -95,24 +101,11 @@ class Game {
      * @param {string} content
      */
     startStory(playerId, content) {
-        const player = this.#users.get(playerId);
-
-        if (player === undefined) throw new UserNotInGame(this.id || "", playerId);
+        if (!this.hasUser(playerId)) throw new UserNotInGame(this.id || "", playerId);
 
         if (this.userActivity(playerId) !== PlayerActivity.StartingStory) throw new InvalidPlayerActivity();
 
-        this.#stories.push(new Story([content], playerId, Array.from(this.#users.keys())));
-
-        const storyForPlayer = this.#stories.find((story) => story.status().playerId === player.id());
-
-        let newActivity;
-        if (storyForPlayer !== undefined) {
-            newActivity = PlayerActivity.RedactingStory(this.#stories.indexOf(storyForPlayer));
-        } else {
-            newActivity = PlayerActivity.AwaitingStory;
-        }
-
-        this.#users.set(player.id(), new UserInGame(player.id(), newActivity));
+        this.#stories.push(new Story([content], playerId, this.#users));
     }
 
     /**
@@ -137,13 +130,22 @@ class Game {
      *
      * @param {string} playerId
      * @param {number} storyIndex
-     * @param {number[]} wordIndices
      */
-    censorStory(playerId, storyIndex, wordIndices) {
+    #ensurePlayerCanRedactStory(playerId, storyIndex) {
         const activity = this.userActivity(playerId);
         if (activity === undefined) throw new UserNotInGame(this.id || "", playerId);
         const requiredActivity = PlayerActivity.RedactingStory(storyIndex);
         if (!isSameActivity(activity, requiredActivity)) throw new InvalidPlayerActivity(activity, requiredActivity);
+    }
+
+    /**
+     *
+     * @param {string} playerId
+     * @param {number} storyIndex
+     * @param {number[]} wordIndices
+     */
+    censorStory(playerId, storyIndex, wordIndices) {
+        this.#ensurePlayerCanRedactStory(playerId, storyIndex);
 
         const story = this.#stories[storyIndex];
         if (story === undefined) return;
@@ -156,6 +158,25 @@ class Game {
         });
 
         story.censor(playerId, wordIndices);
+    }
+
+    /**
+     *
+     * @param {string} playerId
+     * @param {number} storyIndex
+     * @param {number} truncationCount
+     */
+    truncateStory(playerId, storyIndex, truncationCount) {
+        this.#ensurePlayerCanRedactStory(playerId, storyIndex);
+        const story = this.#stories[storyIndex];
+        if (story === undefined) return;
+        const entry = story.entry(0);
+        if (entry === undefined) return;
+        const words = entry.split(" ");
+
+        if (truncationCount >= words.length) throw new IndexOutOfBounds("truncationCount must be less than 5.");
+
+        story.truncate(playerId, truncationCount);
     }
 }
 
@@ -188,10 +209,11 @@ class Story {
     /**
      *
      * @param {string[]} entries
-     * @param {string} creatorId;
+     * @param {string} creatorId
      * @param {string[]} playerIds
+     * @param {StoryStatus} [status]
      */
-    constructor(entries = [], creatorId, playerIds) {
+    constructor(entries = [], creatorId, playerIds, status) {
         this.#entries = entries;
         this.#creatorId = creatorId;
         this.#playerIds = playerIds;
@@ -200,7 +222,7 @@ class Story {
         else {
             this.#nextPlayer = playerIds[nextPlayerIndex];
         }
-        this.#status = StoryStatus.Redact(this.#nextPlayer);
+        this.#status = status || StoryStatus.Redact(this.#nextPlayer);
     }
 
     startedBy() {
@@ -214,6 +236,10 @@ class Story {
      */
     entry(index) {
         return this.#entries[index];
+    }
+
+    entries() {
+        return Array.from(this.#entries);
     }
 
     status() {
@@ -231,7 +257,21 @@ class Story {
         else {
             this.#nextPlayer = this.#playerIds[nextPlayerIndex];
         }
-        this.#status = StoryStatus.Repair(this.#nextPlayer, wordIndices);
+        this.#status = StoryStatus.RepairCensor(this.#nextPlayer, wordIndices);
+    }
+
+    /**
+     *
+     * @param {string} playerId
+     * @param {number} truncationCount
+     */
+    truncate(playerId, truncationCount) {
+        const nextPlayerIndex = this.#playerIds.indexOf(this.#nextPlayer) + 1;
+        if (nextPlayerIndex === this.#playerIds.length) this.#nextPlayer = this.#playerIds[0];
+        else {
+            this.#nextPlayer = this.#playerIds[nextPlayerIndex];
+        }
+        this.#status = StoryStatus.RepairTruncation(this.#nextPlayer, truncationCount);
     }
 }
 

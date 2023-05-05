@@ -23,8 +23,8 @@ exports.gameRepositoryContract = (gameRepo) => {
         });
 
         test("retreives games by id", async () => {
-            expect(await repo.get(game1.id)).toBe(game1);
-            expect(await repo.get(game2.id)).toBe(game2);
+            expect(await repo.get(game1.id)).toEqual(game1);
+            expect(await repo.get(game2.id)).toEqual(game2);
         });
     });
 };

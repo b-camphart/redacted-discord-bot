@@ -64,7 +64,7 @@ describe("AddPlayerToGame", () => {
 
         const updatedGame = await addPlayerToGame.addPlayer(gameId, userId);
         expect(updatedGame.hasUser(userId)).toBe(true);
-        expect(await gameRepository.get(gameId)).toBe(updatedGame);
+        expect(await gameRepository.get(gameId)).toEqual(updatedGame);
     });
 
     test("notifies all players when a player is added to the game", async () => {

@@ -34,7 +34,11 @@ exports.MustHaveLength = class MustHaveLength extends Error {
 };
 
 exports.IndexOutOfBounds = class IndexOutOfBounds extends Error {
-    constructor() {
-        super();
+    /**
+     *
+     * @param {string} message
+     */
+    constructor(message) {
+        super(message);
     }
 };

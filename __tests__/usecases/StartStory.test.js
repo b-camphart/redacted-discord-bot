@@ -107,7 +107,7 @@ describe("Start Story", () => {
 
                     describe("when the previous player starts their story in the game", () => {
                         beforeEach(async () => {
-                            game.startStory("player-1", "content 1");
+                            await new StartStory(gameRepository).startStory(game.id, "player-1", "content 1");
                         });
 
                         test("the player is redacting the other player's story", async () => {

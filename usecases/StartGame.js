@@ -49,10 +49,10 @@ class StartGame {
      * @param {GameWithId} game
      */
     async #notifyPlayers(game) {
-        const emissions = game.users().map((user) => {
-            const activity = game.userActivity(user.id());
+        const emissions = game.users().map((userId) => {
+            const activity = game.userActivity(userId);
             if (activity === undefined) throw "Activity for user in game is undefined.";
-            this.#playerNotifier.notifyPlayer(user.id(), new PlayerActivityChanged(game.id, user.id(), activity));
+            this.#playerNotifier.notifyPlayer(userId, new PlayerActivityChanged(game.id, userId, activity));
         });
         await Promise.allSettled(emissions);
     }

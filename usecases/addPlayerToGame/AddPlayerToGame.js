@@ -60,7 +60,7 @@ exports.AddPlayerToGame = class AddPlayerToGame {
         this.#assertUserNotInGame(game, userId);
         const user = await this.#getUser(userId);
 
-        const preExistingPlayers = game.users().map((userInGame) => userInGame.id());
+        const preExistingPlayers = game.users();
 
         game.addUser(user.id);
         this.#gameRepository.replace(game);

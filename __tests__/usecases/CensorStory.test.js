@@ -6,9 +6,10 @@ const { StoryStatus } = require("../../entities/Game.StoryStatus");
 const { User } = require("../../entities/User");
 const { GameNotFound } = require("../../repositories/GameRepositoryExceptions");
 const { RedactStory } = require("../../usecases/RedactStory");
+const { StartStory } = require("../../usecases/StartStory");
 const { IndexOutOfBounds, MustHaveLength } = require("../../usecases/validation");
 
-describe("Redact a Story", () => {
+describe("Censor a Story", () => {
     /** @type {FakeGameRepository} */
     let games;
 
@@ -22,17 +23,45 @@ describe("Redact a Story", () => {
 
     describe("contract", () => {
         describe("gameId", () => {
-            it.each([13, [], {}])("requires the gameId to be a string", async (gameId) => {
+            it("is a required", async () => {
+                // @ts-ignore
+                const action = redactStory.censorStory();
+                await expect(action).rejects.toThrow(TypeError);
+                await expect(action).rejects.toThrow("gameId is required.");
+            });
+            it.each([13, [], {}])("must be a string", async (gameId) => {
                 // @ts-ignore
                 const action = redactStory.censorStory(gameId);
                 await expect(action).rejects.toThrow(TypeError);
+                await expect(action).rejects.toThrow("gameId must be a string.");
             });
         });
         describe("userId", () => {
-            it.each([13, [], {}])("requires the userId to be a string", async (userId) => {
+            it("is a required", async () => {
+                // @ts-ignore
+                const action = redactStory.censorStory("game-id", undefined);
+                await expect(action).rejects.toThrow(TypeError);
+                await expect(action).rejects.toThrow("userId is required.");
+            });
+            it.each([13, [], {}])("must be a string", async (userId) => {
                 // @ts-ignore
                 const action = redactStory.censorStory("game-id", userId);
                 await expect(action).rejects.toThrow(TypeError);
+                await expect(action).rejects.toThrow("userId must be a string.");
+            });
+        });
+        describe("storyIndex", () => {
+            it("is a required", async () => {
+                // @ts-ignore
+                const action = redactStory.censorStory("game-id", "user-id", undefined);
+                await expect(action).rejects.toThrow(TypeError);
+                await expect(action).rejects.toThrow("storyIndex is required.");
+            });
+            it.each(["12", [], {}])("must be a number", async (storyIndex) => {
+                // @ts-ignore
+                const action = redactStory.censorStory("game-id", "user-id", storyIndex);
+                await expect(action).rejects.toThrow(TypeError);
+                await expect(action).rejects.toThrow("storyIndex must be a number.");
             });
         });
         describe("wordIndices", () => {
@@ -137,7 +166,7 @@ describe("Redact a Story", () => {
                 test("the story is awaiting repair by the next player", async () => {
                     await redactStory.censorStory(game.id, "user-id", 0, [2, 4, 6]);
                     const savedGame = (await games.get(game.id)) || fail("game was removed from repo");
-                    expect(savedGame.storyStatus(0)).toEqual(StoryStatus.Repair("player-1", [2, 4, 6]));
+                    expect(savedGame.storyStatus(0)).toEqual(StoryStatus.RepairCensor("player-1", [2, 4, 6]));
                 });
 
                 describe("given the previous player has already redacted a story", () => {
@@ -155,8 +184,8 @@ describe("Redact a Story", () => {
                 describe("once the previous player redacts a story", () => {
                     beforeEach(async () => {
                         await redactStory.censorStory(game.id, "user-id", 0, [2, 4, 6]);
-                        game.startStory("player-2", "content-2");
-                        game.censorStory("player-3", 2, [0]);
+                        await new StartStory(games).startStory(game.id, "player-2", "content-2");
+                        await redactStory.censorStory(game.id, "player-3", 2, [0]);
                     });
                     test("the player is repairing a story", async () => {
                         const savedGame = (await games.get(game.id)) || fail("game was removed from repo");
