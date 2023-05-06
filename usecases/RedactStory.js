@@ -1,20 +1,13 @@
-const { Game } = require("../entities/Game");
 const { GameNotFound } = require("../repositories/GameRepositoryExceptions");
 const { param } = require("../validation");
 const { exclusive, inclusive, mustBeInRange } = require("../validation/numbers");
 const { mustHaveLengthInRange, eachValueOf } = require("../validation/arrays");
 
-/**
- * @typedef {Object} GameRepository
- * @property {(gameId: string) => Promise<Game & { id: string} | undefined>} get
- * @prop {(game: Game & { id: string}) => Promise<void>} replace
- */
-
 exports.RedactStory = class RedactStory {
     #games;
     /**
      *
-     * @param {GameRepository} gameRepository
+     * @param {import("../repositories/GameRepository").UpdateGameRepository} gameRepository
      */
     constructor(gameRepository) {
         this.#games = gameRepository;

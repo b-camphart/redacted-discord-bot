@@ -1,15 +1,17 @@
 const { makeGame } = require("../entities/makeGame");
+/** @typedef {import("../../repositories/GameRepository").GameRepository} GameRepository */
+/** @typedef {import("../../repositories/GameRepository").GameWithId} GameWithId */
 
 /**
- * @param {import("./GameRepository").GameRepositoryConstructor} gameRepo
+ * @param {() => GameRepository} gameRepo
  */
 exports.gameRepositoryContract = (gameRepo) => {
     describe("GameRepository", () => {
-        /** @type {import("./GameRepository").GameWithId} */
+        /** @type {GameWithId} */
         let game1;
-        /** @type {import("./GameRepository").GameWithId} */
+        /** @type {GameWithId} */
         let game2;
-        const repo = new gameRepo();
+        const repo = gameRepo();
 
         beforeEach(async () => {
             game1 = await repo.add(makeGame());

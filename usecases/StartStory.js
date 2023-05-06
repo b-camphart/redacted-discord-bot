@@ -6,22 +6,12 @@ const { exclusive, inclusive } = require("../validation/numbers");
 const { mustNotBeBlank } = require("../validation/strings");
 const { MustHaveLength } = require("./validation");
 
-/**
- * @typedef {Game & { id: string }} GameWithId
- */
-
-/**
- * @typedef {Object} GameRepository
- * @property {(gameId: string) => Promise<GameWithId | undefined>} get
- * @property {(game: GameWithId) => Promise<void>} replace
- */
-
 class StartStory {
     #gameRepository;
 
     /**
      *
-     * @param {GameRepository} gameRepository
+     * @param {import("../repositories/GameRepository").UpdateGameRepository} gameRepository
      */
     constructor(gameRepository) {
         this.#gameRepository = gameRepository;

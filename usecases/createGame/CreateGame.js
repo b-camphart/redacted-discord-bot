@@ -3,24 +3,7 @@ const { Game } = require("../../entities/Game");
 const { User } = require("../../entities/User");
 const { GameCreated } = require("./GameCreated");
 const { param } = require("../../validation");
-
-/**
- * @typedef {User & { id: string }} UserWithId
- */
-
-/**
- * @typedef {Object} UserRepository
- * @property {(userId: string) => Promise<(UserWithId) | undefined>} get
- */
-
-/**
- * @typedef {Game & { id: string }} GameWithId
- */
-
-/**
- * @typedef {Object} GameRepository
- * @property {(game: Game) => Promise<GameWithId>} add
- */
+/** @typedef {import("../../repositories/UserRepository").UserWithId} UserWithId */
 
 exports.CreateGame = class CreateGame {
     #users;
@@ -28,8 +11,8 @@ exports.CreateGame = class CreateGame {
 
     /**
      *
-     * @param {UserRepository} users
-     * @param {GameRepository} games
+     * @param {import("../../repositories/UserRepository").ReadOnlyUserRepository} users
+     * @param {import("../../repositories/GameRepository").CreateGameRepository} games
      */
     constructor(users, games) {
         this.#users = users;
@@ -74,7 +57,6 @@ exports.CreateGame = class CreateGame {
     /**
      *
      * @param {Game} game
-     * @returns {Promise<GameWithId>}
      */
     async #saveGame(game) {
         return await this.#games.add(game);

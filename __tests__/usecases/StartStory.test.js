@@ -73,7 +73,7 @@ describe("Start Story", () => {
     });
 
     describe("given the game exists", () => {
-        /** @type {import("../../doubles/repositories/GameRepository").GameWithId} */
+        /** @type {import("../../repositories/GameRepository").GameWithId} */
         let game;
         /**
          *
@@ -182,7 +182,7 @@ describe("Start Story", () => {
 
 /**
  *
- * @param {import("../../usecases/StartStory").GameRepository} gameRepository
+ * @param {import("../../repositories/GameRepository").UpdateGameRepository} gameRepository
  * @returns {StartStory}
  */
 const makeStartStory = (gameRepository = new FakeGameRepository()) => {

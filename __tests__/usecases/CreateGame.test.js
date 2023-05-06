@@ -27,13 +27,9 @@ describe("CreateGame", () => {
 
     test("user must exist", async () => {
         const userId = "123456";
-        expect.assertions(2);
-        try {
-            await createGame.create(userId);
-        } catch (error) {
-            expect(error).toBeInstanceOf(UserNotFound);
-            expect(/** @type {UserNotFound} */ (error).userId).toBe(userId);
-        }
+        const action = createGame.create(userId);
+        await expect(action).rejects.toThrow(UserNotFound);
+        await expect(action).rejects.toHaveProperty("userId", userId);
     });
 
     describe("given user exists", () => {

@@ -1,20 +1,14 @@
-const { UserNotInGame, Game, InvalidPlayerActivity } = require("../entities/Game");
+const { UserNotInGame, InvalidPlayerActivity } = require("../entities/Game");
 const { isSameActivity, PlayerActivity } = require("../entities/Game.PlayerActivity");
 const { GameNotFound } = require("../repositories/GameRepositoryExceptions");
 const { param } = require("../validation");
-
-/**
- * @typedef {Object} GameRepository
- * @prop {(gameId: string) => Promise<Game & {id: string} | undefined>} get
- * @property {(game: Game & {id: string}) => Promise<void>} replace
- */
 
 exports.RepairStory = class RepairStory {
     #games;
 
     /**
      *
-     * @param {GameRepository} gameRepository
+     * @param {import("../repositories/GameRepository").UpdateGameRepository} gameRepository
      */
     constructor(gameRepository) {
         this.#games = gameRepository;

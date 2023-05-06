@@ -1,10 +1,10 @@
-/** @typedef {import("./UserRepository").UserRepository} UserRepository */
-/** @typedef {import("./UserRepository").UserWithId} UserWithId */
+/** @typedef {import("../../repositories/UserRepository").ReadOnlyUserRepository} ReadOnlyUserRepository */
+/** @typedef {import("../../repositories/UserRepository").UserWithId} UserWithId */
 
 const { User } = require("../../entities/User");
 
 /**
- * @implements {UserRepository}
+ * @implements {ReadOnlyUserRepository}
  */
 exports.FakeUserRepository = class FakeUserRepository {
     /** @type {Map<string, UserWithId>} */

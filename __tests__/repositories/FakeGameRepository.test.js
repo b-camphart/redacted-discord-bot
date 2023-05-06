@@ -3,7 +3,7 @@ const { FakeGameRepository } = require("../../doubles/repositories/FakeGameRepos
 const { gameRepositoryContract } = require("../../doubles/repositories/gameRepositoryContract");
 
 describe("FakeGameRepository", () => {
-    gameRepositoryContract(FakeGameRepository);
+    gameRepositoryContract(() => new FakeGameRepository());
 
     test("modifications made to retreived game are not reflected in saved game", async () => {
         const repo = new FakeGameRepository();

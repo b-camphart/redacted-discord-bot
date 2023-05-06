@@ -4,9 +4,9 @@ const { User } = require("../../entities/User");
 describe("FakeUserRepository", () => {
     /** @type {FakeUserRepository} */
     let repo;
-    /** @type {import("../../doubles/repositories/UserRepository").UserWithId} */
+    /** @type {import("../../repositories/UserRepository").UserWithId} */
     let user1;
-    /** @type {import("../../doubles/repositories/UserRepository").UserWithId} */
+    /** @type {import("../../repositories/UserRepository").UserWithId} */
     let user2;
 
     beforeEach(async () => {

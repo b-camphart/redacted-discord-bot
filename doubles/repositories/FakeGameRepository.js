@@ -1,5 +1,5 @@
-/** @typedef {import("./GameRepository").GameRepository} GameRepository */
-/** @typedef {import("./GameRepository").GameWithId} GameWithId */
+/** @typedef {import("../../repositories/GameRepository").GameRepository} GameRepository */
+/** @typedef {import("../../repositories/GameRepository").GameWithId} GameWithId */
 
 const { Game } = require("../../entities/Game");
 
