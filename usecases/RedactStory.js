@@ -1,7 +1,8 @@
-const { UserNotInGame, Game, InvalidPlayerActivity } = require("../entities/Game");
-const { PlayerActivity, isSameActivity } = require("../entities/Game.PlayerActivity");
+const { Game } = require("../entities/Game");
 const { GameNotFound } = require("../repositories/GameRepositoryExceptions");
-const { MustHaveLength, IndexOutOfBounds } = require("./validation");
+const { param } = require("../validation");
+const { exclusive, inclusive, mustBeInRange } = require("../validation/numbers");
+const { mustHaveLengthInRange, eachValueOf } = require("../validation/arrays");
 
 /**
  * @typedef {Object} GameRepository
@@ -66,8 +67,7 @@ exports.RedactStory = class RedactStory {
      * @param {any} gameId
      */
     static #validateGameId(gameId) {
-        if (gameId === undefined) throw new TypeError("gameId is required.");
-        if (typeof gameId !== "string") throw new TypeError("gameId must be a string.");
+        param("gameId", gameId).isRequired().mustBeString();
     }
 
     /**
@@ -75,8 +75,7 @@ exports.RedactStory = class RedactStory {
      * @param {any} userId
      */
     static #validateUserId(userId) {
-        if (userId === undefined) throw new TypeError("userId is required.");
-        if (typeof userId !== "string") throw new TypeError("userId must be a string.");
+        param("userId", userId).isRequired().mustBeString();
     }
 
     /**
@@ -84,20 +83,18 @@ exports.RedactStory = class RedactStory {
      * @param {any} storyIndex
      */
     static #validateStoryIndex(storyIndex) {
-        if (storyIndex === undefined) throw new TypeError("storyIndex is required.");
-        if (typeof storyIndex !== "number") throw new TypeError("storyIndex must be a number.");
+        param("storyIndex", storyIndex).isRequired().mustBeNumber();
     }
 
     /**
      *
-     * @param {any} wordIndices
+     * @param {any | undefined} wordIndices
      */
     static #validateWordIndices(wordIndices) {
-        if (wordIndices === undefined) throw new TypeError("wordIndices is required.");
-        if (!Array.isArray(wordIndices)) throw new TypeError("wordIndices must be an array.");
-        if (wordIndices.length === 0 || wordIndices.length > 3) throw new MustHaveLength("wordIndices", 1, 3);
-        wordIndices.forEach((value) => {
-            if (typeof value !== "number") throw new TypeError("wordIndices must contain only numbers");
+        const arrayParam = param("wordIndices", wordIndices).isRequired().mustBeArray();
+        mustHaveLengthInRange(arrayParam, exclusive(0), inclusive(3));
+        eachValueOf(arrayParam, (valueParam) => {
+            valueParam.isRequired().mustBeNumber();
         });
     }
 
@@ -106,12 +103,8 @@ exports.RedactStory = class RedactStory {
      * @param {any} truncationCount
      */
     static #validateTruncationCount(truncationCount) {
-        if (truncationCount === undefined) throw new TypeError("truncationCount is required.");
-        if (typeof truncationCount !== "number") throw new TypeError("truncationCount must be a number.");
-        if (truncationCount <= 0)
-            throw new IndexOutOfBounds(`truncationCount <${truncationCount}> must be greater than 0.`);
-        if (truncationCount > 7)
-            throw new IndexOutOfBounds(`truncationCount <${truncationCount}> must be less than 7.`);
+        const numberParam = param("truncationCount", truncationCount).isRequired().mustBeNumber();
+        mustBeInRange(numberParam, exclusive(0), exclusive(7));
     }
 
     /**

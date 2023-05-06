@@ -1,5 +1,6 @@
 const { Game, UserNotInGame } = require("../entities/Game");
 const { GameNotFound } = require("../repositories/GameRepositoryExceptions");
+const { param } = require("../validation");
 const { PlayerActivityChanged } = require("./applicationEvents");
 
 /**
@@ -36,6 +37,8 @@ class StartGame {
      * @throws {NotEnoughPlayersInGame} if there are less than 4 players in the game
      */
     async startGame(gameId, playerId) {
+        param("gameId", gameId).isRequired().mustBeString();
+        param("playerId", playerId).isRequired().mustBeString();
         const game = await this.#getGame(gameId);
         if (!game.hasUser(playerId)) throw new UserNotInGame(gameId, playerId);
         game.start();

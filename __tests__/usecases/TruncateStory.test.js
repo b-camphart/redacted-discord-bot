@@ -8,6 +8,8 @@ const { GameNotFound } = require("../../repositories/GameRepositoryExceptions");
 const { RedactStory } = require("../../usecases/RedactStory");
 const { StartStory } = require("../../usecases/StartStory");
 const { IndexOutOfBounds, MustHaveLength } = require("../../usecases/validation");
+const { OutOfRange } = require("../../validation/numbers");
+const { contract, isRequired, mustBeString, mustBeNumber } = require("../contracts");
 
 describe("Truncate a Story", () => {
     /** @type {FakeGameRepository} */
@@ -22,69 +24,53 @@ describe("Truncate a Story", () => {
     });
 
     describe("contract", () => {
-        describe("gameId", () => {
-            it("is a required", async () => {
+        contract("gameId", (name) => {
+            isRequired(name, () => {
                 // @ts-ignore
-                const action = redactStory.truncateStory();
-                await expect(action).rejects.toThrow(TypeError);
-                await expect(action).rejects.toThrow("gameId is required.");
+                return redactStory.truncateStory();
             });
-            it.each([13, [], {}])("must be a string", async (gameId) => {
+            mustBeString(name, (gameId) => {
                 // @ts-ignore
-                const action = redactStory.truncateStory(gameId);
-                await expect(action).rejects.toThrow(TypeError);
-                await expect(action).rejects.toThrow("gameId must be a string.");
+                return redactStory.truncateStory(gameId);
             });
         });
-        describe("userId", () => {
-            it("is a required", async () => {
+        contract("userId", (name) => {
+            isRequired(name, () => {
                 // @ts-ignore
-                const action = redactStory.truncateStory("game-id", undefined);
-                await expect(action).rejects.toThrow(TypeError);
-                await expect(action).rejects.toThrow("userId is required.");
+                return redactStory.truncateStory("game-id");
             });
-            it.each([13, [], {}])("must be a string", async (userId) => {
+            mustBeString(name, (userId) => {
                 // @ts-ignore
-                const action = redactStory.truncateStory("game-id", userId);
-                await expect(action).rejects.toThrow(TypeError);
-                await expect(action).rejects.toThrow("userId must be a string.");
+                return redactStory.truncateStory("game-id", userId);
             });
         });
-        describe("storyIndex", () => {
-            it("is a required", async () => {
+        contract("storyIndex", (name) => {
+            isRequired(name, () => {
                 // @ts-ignore
-                const action = redactStory.truncateStory("game-id", "user-id", undefined);
-                await expect(action).rejects.toThrow(TypeError);
-                await expect(action).rejects.toThrow("storyIndex is required.");
+                return redactStory.truncateStory("game-id", "user-id", undefined);
             });
-            it.each(["12", [], {}])("must be a number", async (storyIndex) => {
+            mustBeNumber(name, (storyIndex) => {
                 // @ts-ignore
-                const action = redactStory.truncateStory("game-id", "user-id", storyIndex);
-                await expect(action).rejects.toThrow(TypeError);
-                await expect(action).rejects.toThrow("storyIndex must be a number.");
+                return redactStory.truncateStory("game-id", "user-id", storyIndex);
             });
         });
-        describe("truncationCount", () => {
-            it("is required", async () => {
+        contract("truncationCount", (name) => {
+            isRequired(name, () => {
                 // @ts-ignore
-                const action = redactStory.truncateStory("game-id", "user-id", 0, undefined);
-                await expect(action).rejects.toThrow(TypeError);
-                await expect(action).rejects.toThrow("truncationCount is required.");
+                return redactStory.truncateStory("game-id", "user-id", 0, undefined);
             });
-            it.each(["12", [], {}])("must be a number", async (truncationCount) => {
+            mustBeNumber(name, (truncationCount) => {
                 // @ts-ignore
-                const action = redactStory.truncateStory("game-id", "user-id", 0, truncationCount);
-                await expect(action).rejects.toThrow(TypeError);
-                await expect(action).rejects.toThrow("truncationCount must be a number.");
+                return redactStory.truncateStory("game-id", "user-id", 0, truncationCount);
             });
             it("must be greater than 0", async () => {
                 const action = redactStory.truncateStory("game-id", "user-id", 0, 0);
-                await expect(action).rejects.toThrow(IndexOutOfBounds);
+                await expect(action).rejects.toThrow(OutOfRange);
                 await expect(action).rejects.toThrow("truncationCount <0> must be greater than 0.");
             });
             it("must be less than 7", async () => {
                 const action = redactStory.truncateStory("game-id", "user-id", 0, 8);
-                await expect(action).rejects.toThrow(IndexOutOfBounds);
+                await expect(action).rejects.toThrow(OutOfRange);
                 await expect(action).rejects.toThrow("truncationCount <8> must be less than 7.");
             });
         });

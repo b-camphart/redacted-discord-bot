@@ -1,23 +1,3 @@
-/**
- *
- * @param {string} content
- * @returns {boolean} `true` if the content is blank, `false` otherwise.
- */
-exports.isStringBlank = (content) => {
-    return /^\s*$/.test(content);
-};
-
-exports.MustNotBeBlank = class MustNotBeBlank extends Error {
-    /**
-     *
-     * @param {string} parameterName - The name of the parameter that was blank.
-     */
-    constructor(parameterName) {
-        super(`${parameterName} must not be blank.`);
-        this.parameterName = parameterName;
-    }
-};
-
 exports.MustHaveLength = class MustHaveLength extends Error {
     /**
      *

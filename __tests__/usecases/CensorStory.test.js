@@ -8,6 +8,8 @@ const { GameNotFound } = require("../../repositories/GameRepositoryExceptions");
 const { RedactStory } = require("../../usecases/RedactStory");
 const { StartStory } = require("../../usecases/StartStory");
 const { IndexOutOfBounds, MustHaveLength } = require("../../usecases/validation");
+const { OutOfRange } = require("../../validation/numbers");
+const { isRequired, mustBeString, contract, mustBeNumber } = require("../contracts");
 
 describe("Censor a Story", () => {
     /** @type {FakeGameRepository} */
@@ -22,55 +24,40 @@ describe("Censor a Story", () => {
     });
 
     describe("contract", () => {
-        describe("gameId", () => {
-            it("is a required", async () => {
+        contract("gameId", (name) => {
+            isRequired(name, () => {
                 // @ts-ignore
-                const action = redactStory.censorStory();
-                await expect(action).rejects.toThrow(TypeError);
-                await expect(action).rejects.toThrow("gameId is required.");
+                return redactStory.censorStory();
             });
-            it.each([13, [], {}])("must be a string", async (gameId) => {
+            mustBeString(name, (gameId) => {
                 // @ts-ignore
-                const action = redactStory.censorStory(gameId);
-                await expect(action).rejects.toThrow(TypeError);
-                await expect(action).rejects.toThrow("gameId must be a string.");
+                return redactStory.censorStory(gameId);
             });
         });
-        describe("userId", () => {
-            it("is a required", async () => {
+        contract("userId", (name) => {
+            isRequired(name, () => {
                 // @ts-ignore
-                const action = redactStory.censorStory("game-id", undefined);
-                await expect(action).rejects.toThrow(TypeError);
-                await expect(action).rejects.toThrow("userId is required.");
+                return redactStory.censorStory("game-id");
             });
-            it.each([13, [], {}])("must be a string", async (userId) => {
+            mustBeString(name, (userId) => {
                 // @ts-ignore
-                const action = redactStory.censorStory("game-id", userId);
-                await expect(action).rejects.toThrow(TypeError);
-                await expect(action).rejects.toThrow("userId must be a string.");
+                return redactStory.censorStory("game-id", userId);
             });
         });
-        describe("storyIndex", () => {
-            it("is a required", async () => {
+        contract("storyIndex", (name) => {
+            isRequired(name, () => {
                 // @ts-ignore
-                const action = redactStory.censorStory("game-id", "user-id", undefined);
-                await expect(action).rejects.toThrow(TypeError);
-                await expect(action).rejects.toThrow("storyIndex is required.");
+                return redactStory.censorStory("game-id", "user-id");
             });
-            it.each(["12", [], {}])("must be a number", async (storyIndex) => {
+            mustBeNumber(name, (storyIndex) => {
                 // @ts-ignore
-                const action = redactStory.censorStory("game-id", "user-id", storyIndex);
-                await expect(action).rejects.toThrow(TypeError);
-                await expect(action).rejects.toThrow("storyIndex must be a number.");
+                return redactStory.censorStory("game-id", "user-id", storyIndex);
             });
         });
-        describe("wordIndices", () => {
-            it("requires wordIndices", async () => {
+        contract("wordIndices", (name) => {
+            isRequired(name, () => {
                 // @ts-ignore
-                const action = redactStory.censorStory("game-id", "user-id", 0, undefined);
-                const rejection = expect(action).rejects;
-                await rejection.toThrow(TypeError);
-                await rejection.toThrow("wordIndices is required.");
+                return redactStory.censorStory("game-id", "user-id", 0, undefined);
             });
             it.each(["", {}, 12, true, [""], [1, 2, "16"]])(
                 "requires the wordIndices to be an array of numbers",
@@ -84,18 +71,14 @@ describe("Censor a Story", () => {
             it("requires the wordIndices to have at least one number", async () => {
                 const action = redactStory.censorStory("game-id", "user-id", 0, []);
                 const rejection = expect(action).rejects;
-                await rejection.toThrow(MustHaveLength);
-                await rejection.toHaveProperty("parameterName", "wordIndices");
-                await rejection.toHaveProperty("min", 1);
-                await rejection.toHaveProperty("max", 3);
+                await rejection.toThrow(OutOfRange);
+                await rejection.toThrow("length of wordIndices <0> must be greater than 0.");
             });
             it("requires the wordIndices to have at most three numbers", async () => {
                 const action = redactStory.censorStory("game-id", "user-id", 0, [0, 0, 0, 0]);
                 const rejection = expect(action).rejects;
-                await rejection.toThrow(MustHaveLength);
-                await rejection.toHaveProperty("parameterName", "wordIndices");
-                await rejection.toHaveProperty("min", 1);
-                await rejection.toHaveProperty("max", 3);
+                await rejection.toThrow(OutOfRange);
+                await rejection.toThrow("length of wordIndices <4> must be less than or equal to 3.");
             });
         });
     });

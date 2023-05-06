@@ -5,6 +5,7 @@ const { PlayerActivity } = require("../../entities/Game.PlayerActivity");
 const { StoryStatus } = require("../../entities/Game.StoryStatus");
 const { GameNotFound } = require("../../repositories/GameRepositoryExceptions");
 const { RepairStory } = require("../../usecases/RepairStory");
+const { contract, isRequired, mustBeString } = require("../contracts");
 
 describe("Repair a Story", () => {
     /** @type {FakeGameRepository} */
@@ -15,6 +16,29 @@ describe("Repair a Story", () => {
     beforeEach(() => {
         games = new FakeGameRepository();
         repairStory = new RepairStory(games);
+    });
+
+    describe("contract", () => {
+        contract("gameId", (name) => {
+            isRequired(name, () => {
+                // @ts-ignore
+                return repairStory.repairStory();
+            });
+            mustBeString(name, (gameId) => {
+                // @ts-ignore
+                return repairStory.repairStory(gameId);
+            });
+        });
+        contract("playerId", (name) => {
+            isRequired(name, () => {
+                // @ts-ignore
+                return repairStory.repairStory("game-id");
+            });
+            mustBeString(name, (playerId) => {
+                // @ts-ignore
+                return repairStory.repairStory("game-id", playerId);
+            });
+        });
     });
 
     test("game must exist", async () => {

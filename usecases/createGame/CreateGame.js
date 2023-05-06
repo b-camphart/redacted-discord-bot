@@ -2,6 +2,7 @@ const { UserNotFound } = require("../../repositories/UserRepositoryExceptions");
 const { Game } = require("../../entities/Game");
 const { User } = require("../../entities/User");
 const { GameCreated } = require("./GameCreated");
+const { param } = require("../../validation");
 
 /**
  * @typedef {User & { id: string }} UserWithId
@@ -84,6 +85,6 @@ exports.CreateGame = class CreateGame {
      * @param {any} userId
      */
     static #validateUserId(userId) {
-        if (typeof userId !== "string") throw TypeError("userId must be a string.");
+        param("userId", userId).isRequired().mustBeString();
     }
 };

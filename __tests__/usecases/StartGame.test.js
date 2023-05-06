@@ -6,6 +6,7 @@ const { PlayerActivity } = require("../../entities/Game.PlayerActivity");
 const { GameNotFound } = require("../../repositories/GameRepositoryExceptions");
 const { StartGame } = require("../../usecases/StartGame");
 const { PlayerActivityChanged } = require("../../usecases/applicationEvents");
+const { contract, isRequired, mustBeString } = require("../contracts");
 
 describe("Start Game", () => {
     const userId = "user-id";
@@ -20,6 +21,29 @@ describe("Start Game", () => {
         gameRepository = new FakeGameRepository();
         playerNotifierSpy = new PlayerNotifierSpy();
         startGame = makeStartGame(gameRepository, playerNotifierSpy);
+    });
+
+    describe("contract", () => {
+        contract("gameId", (name) => {
+            isRequired(name, () => {
+                // @ts-ignore
+                return startGame.startGame();
+            });
+            mustBeString(name, (gameId) => {
+                // @ts-ignore
+                return startGame.startGame(gameId);
+            });
+        });
+        contract("playerId", (name) => {
+            isRequired(name, () => {
+                // @ts-ignore
+                return startGame.startGame("game-id");
+            });
+            mustBeString(name, (playerId) => {
+                // @ts-ignore
+                return startGame.startGame("game-id", playerId);
+            });
+        });
     });
 
     test("game must exist", async () => {

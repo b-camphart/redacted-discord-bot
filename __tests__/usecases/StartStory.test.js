@@ -5,7 +5,10 @@ const { PlayerActivity } = require("../../entities/Game.PlayerActivity");
 const { StoryStatus } = require("../../entities/Game.StoryStatus");
 const { GameNotFound } = require("../../repositories/GameRepositoryExceptions");
 const { StartStory } = require("../../usecases/StartStory");
-const { MustNotBeBlank, MustHaveLength } = require("../../usecases/validation");
+const { AddPlayerToGame } = require("../../usecases/addPlayerToGame/AddPlayerToGame");
+const { OutOfRange } = require("../../validation/numbers");
+const { MustNotBeBlank } = require("../../validation/strings");
+const { contract, isRequired, mustBeString } = require("../contracts");
 
 describe("Start Story", () => {
     /** @type {StartStory} */
@@ -16,6 +19,52 @@ describe("Start Story", () => {
     beforeEach(() => {
         gameRepository = new FakeGameRepository();
         startStory = makeStartStory(gameRepository);
+    });
+
+    describe("contract", () => {
+        contract("gameId", (name) => {
+            isRequired(name, () => {
+                // @ts-ignore
+                return startStory.startStory();
+            });
+            mustBeString(name, (gameId) => {
+                // @ts-ignore
+                return startStory.startStory(gameId);
+            });
+        });
+        contract("playerId", (name) => {
+            isRequired(name, () => {
+                // @ts-ignore
+                return startStory.startStory("game-id");
+            });
+            mustBeString(name, (playerId) => {
+                // @ts-ignore
+                return startStory.startStory("game-id", playerId);
+            });
+        });
+        contract("content", (name) => {
+            isRequired(name, () => {
+                // @ts-ignore
+                return startStory.startStory("game-id", "player-id");
+            });
+            mustBeString(name, (content) => {
+                // @ts-ignore
+                return startStory.startStory("game-id", "player-id", content);
+            });
+
+            it.each([[""], ["  "], ["\n\r\r\n"]])("the content must not be blank", async (content) => {
+                const action = startStory.startStory("game-id", "player-id", content);
+                await expect(action).rejects.toThrow(MustNotBeBlank);
+            });
+
+            it("the content must not be greater than 256 characters", async () => {
+                let content = "";
+                for (let i = 0; i < 257; i++) content += "a";
+
+                const action = startStory.startStory("game-id", "player-id", content);
+                await expect(action).rejects.toThrow(OutOfRange);
+            });
+        });
     });
 
     test("game must exist", async () => {
@@ -71,20 +120,7 @@ describe("Start Story", () => {
                     game.start();
                 });
 
-                test.each([[""], ["  "], ["\n\r\r\n"]])("the content must not be blank", async (content) => {
-                    const action = playerStartsStoryInGame(content);
-                    await expect(action).rejects.toThrow(MustNotBeBlank);
-                });
-
-                test("the content must be less than 255 characters", async () => {
-                    let content = "";
-                    for (let i = 0; i < 256; i++) content += "a";
-
-                    const action = playerStartsStoryInGame(content);
-                    await expect(action).rejects.toThrow(MustHaveLength);
-                });
-
-                describe("given the provided content is valid", () => {
+                describe("when the player starts their story in the game", () => {
                     const content = "some content";
                     beforeEach(async () => {
                         await playerStartsStoryInGame(content);

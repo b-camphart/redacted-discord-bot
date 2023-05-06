@@ -1,6 +1,7 @@
 const { UserNotInGame, Game, InvalidPlayerActivity } = require("../entities/Game");
 const { isSameActivity, PlayerActivity } = require("../entities/Game.PlayerActivity");
 const { GameNotFound } = require("../repositories/GameRepositoryExceptions");
+const { param } = require("../validation");
 
 /**
  * @typedef {Object} GameRepository
@@ -26,6 +27,9 @@ exports.RepairStory = class RepairStory {
      * @param {number} storyIndex
      */
     async repairStory(gameId, playerId, storyIndex) {
+        this.#validateGameId(gameId);
+        this.#validatePlayerId(playerId);
+
         const game = await this.#games.get(gameId);
         if (game === undefined) throw new GameNotFound(gameId);
 
@@ -36,5 +40,21 @@ exports.RepairStory = class RepairStory {
 
         game.repairStory(playerId, storyIndex);
         await this.#games.replace(game);
+    }
+
+    /**
+     *
+     * @param {any} gameId
+     */
+    #validateGameId(gameId) {
+        param("gameId", gameId).isRequired().mustBeString();
+    }
+
+    /**
+     *
+     * @param {any} playerId
+     */
+    #validatePlayerId(playerId) {
+        param("playerId", playerId).isRequired().mustBeString();
     }
 };

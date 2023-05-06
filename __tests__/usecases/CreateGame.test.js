@@ -5,6 +5,7 @@ const { User } = require("../../entities/User");
 const { FakeGameRepository } = require("../../doubles/repositories/FakeGameRepository");
 const { PlayerActivity } = require("../../entities/Game.PlayerActivity");
 const { GameCreated } = require("../../usecases/createGame/GameCreated");
+const { isRequired, mustBeString, contract } = require("../contracts");
 
 describe("CreateGame", () => {
     const users = new FakeUserRepository();
@@ -12,14 +13,15 @@ describe("CreateGame", () => {
     const createGame = makeCreateGame(users, games);
 
     describe("contract", () => {
-        test("user id must be a string", async () => {
-            expect.assertions(1);
-            try {
+        contract("userId", (name) => {
+            isRequired(name, () => {
                 // @ts-ignore
-                await createGame.create(14);
-            } catch (error) {
-                expect(error).toBeInstanceOf(TypeError);
-            }
+                return createGame.create();
+            });
+            mustBeString(name, (userId) => {
+                // @ts-ignore
+                return createGame.create(userId);
+            });
         });
     });
 
