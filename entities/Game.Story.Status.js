@@ -17,6 +17,8 @@ class StoryStatusWithCorrespondingActivity {
      * @param {string} playerId
      */
     constructor(action, playerId) {
+        if (this.constructor === StoryStatusWithCorrespondingActivity)
+            throw "Cannot instantiate abstract class StoryStatusWithCorrespondingActivity";
         this.action = action;
         this.playerId = playerId;
     }
@@ -40,7 +42,6 @@ class Redact extends StoryStatusWithCorrespondingActivity {
     }
     /**
      *  @param {number} storyIndex
-     * @returns {{ activity: string }}
      */
     toPlayerActivity(storyIndex) {
         return PlayerActivity.RedactingStory(storyIndex, this.entryContent);
@@ -70,7 +71,6 @@ class Repair extends StoryStatusWithCorrespondingActivity {
 
     /**
      *  @param {number} storyIndex
-     * @returns {{ activity: string }}
      */
     toPlayerActivity(storyIndex) {
         if (this.redaction.type === "censor") {
@@ -97,7 +97,6 @@ class Continue extends StoryStatusWithCorrespondingActivity {
     }
     /**
      *  @param {number} storyIndex
-     * @returns {{ activity: string }}
      */
     toPlayerActivity(storyIndex) {
         return PlayerActivity.ContinuingStory(storyIndex, this.repairedContent);

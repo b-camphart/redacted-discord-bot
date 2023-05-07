@@ -5,15 +5,11 @@ const { eachValueOf } = require("../validation/arrays");
 const { GameAlreadyStarted, UserNotInGame, InvalidPlayerActivity } = require("./Game.Exceptions");
 /** @typedef {import("./Game.Story").StorySnapshot} StorySnapshot */
 
-/**
- * @typedef {"pending" | "started" | "ended"} GameStatus
- */
-
 class Game {
     id;
     /** @type {string[]} */
     #users;
-    #status;
+    #isStarted;
     /** @type {Story[]} */
     #stories;
 
@@ -21,14 +17,14 @@ class Game {
      *
      * @param {string | undefined} [id]
      * @param {string[]} [users]
-     * @param {GameStatus} [status]
+     * @param {boolean} [isStarted]
      * @param {StorySnapshot[]} [stories]
      * @param {number} [maxStoryEntries]
      */
-    constructor(id = undefined, users = [], status = "pending", stories = [], maxStoryEntries = 6) {
+    constructor(id = undefined, users = [], isStarted = false, stories = [], maxStoryEntries = 6) {
         this.id = id;
         this.#users = Array.from(users);
-        this.#status = status;
+        this.#isStarted = isStarted;
         this.#stories = stories.map((story) => new Story(story.entries, this.#users, story.status));
         this.maxStoryEntries = maxStoryEntries;
     }
@@ -37,7 +33,7 @@ class Game {
      * @param {string} userId the id of the user to add to the game
      */
     addPlayer(userId) {
-        if (this.#status !== "pending") throw new GameAlreadyStarted(this.id || "");
+        if (this.#isStarted) throw new GameAlreadyStarted(this.id || "");
         if (this.hasPlayer(userId)) return;
         this.#users.push(userId);
     }
@@ -65,9 +61,7 @@ class Game {
      */
     playerActivity(userId) {
         if (!this.hasPlayer(userId)) return undefined;
-
-        const gameHasNotStarted = this.#status === "pending";
-        if (gameHasNotStarted) return PlayerActivity.AwaitingStart;
+        if (!this.#isStarted) return PlayerActivity.AwaitingStart;
 
         const playerHasNotStartedAStory = this.#stories.every((story) => !story.wasStartedBy(userId));
         if (playerHasNotStartedAStory) return PlayerActivity.StartingStory;
@@ -86,11 +80,8 @@ class Game {
         return PlayerActivity.AwaitingStory;
     }
 
-    /**
-     * @returns {GameStatus}
-     */
-    status() {
-        return this.#status;
+    get isStarted() {
+        return this.#isStarted;
     }
 
     stories() {
@@ -98,9 +89,9 @@ class Game {
     }
 
     start(maximumEntriesPerStory = 6) {
-        if (this.#status !== "pending") throw new GameAlreadyStarted(this.id || "");
+        if (this.#isStarted) throw new GameAlreadyStarted(this.id || "");
         this.maxStoryEntries = maximumEntriesPerStory;
-        this.#status = "started";
+        this.#isStarted = true;
     }
 
     /**

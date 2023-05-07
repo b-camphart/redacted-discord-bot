@@ -25,7 +25,7 @@ exports.FakeGameRepository = class FakeGameRepository {
         const gameCopy = new Game(
             gameId,
             storedGame.playerIds(),
-            storedGame.status(),
+            storedGame.isStarted,
             storedGame.stories(),
             storedGame.maxStoryEntries
         );

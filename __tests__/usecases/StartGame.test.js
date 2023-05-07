@@ -93,7 +93,7 @@ describe("Start Game", () => {
                 test("the game is started", async () => {
                     await startGame.startGame(gameId, playerId);
                     const updatedGame = (await gameRepository.get(gameId)) || fail(new GameNotFound(gameId));
-                    expect(updatedGame.status()).toEqual("started");
+                    expect(updatedGame.isStarted).toEqual(true);
                 });
 
                 test("each player is starting a story", async () => {

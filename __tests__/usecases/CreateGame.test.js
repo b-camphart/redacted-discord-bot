@@ -53,7 +53,7 @@ describe("CreateGame", () => {
 
         test("the game is pending", async () => {
             const createdGame = (await games.get(gameCreated.gameId)) || fail();
-            expect(createdGame.status()).toBe("pending");
+            expect(createdGame.isStarted).toBe(false);
         });
 
         test("user is added to game", async () => {
