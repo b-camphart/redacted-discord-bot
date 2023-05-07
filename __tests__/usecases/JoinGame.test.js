@@ -2,16 +2,17 @@ const { FakeGameRepository } = require("../../doubles/repositories/FakeGameRepos
 const { FakeUserRepository } = require("../../doubles/repositories/FakeUserRepository");
 const { PlayerNotifierSpy } = require("../../doubles/repositories/PlayerNotifierDoubles");
 const { makeAddPlayerToGame } = require("../../doubles/usecases/addPlayerToGame/addPlayerToGameFactory");
-const { Game, GameAlreadyStarted } = require("../../entities/Game");
+const { Game } = require("../../entities/Game");
+const { GameAlreadyStarted } = require("../../entities/Game.Exceptions");
 const { User } = require("../../entities/User");
 const { GameNotFound } = require("../../repositories/GameRepositoryExceptions");
 const { UserNotFound } = require("../../repositories/UserRepositoryExceptions");
-const { AddPlayerToGame } = require("../../usecases/addPlayerToGame/AddPlayerToGame");
-const { PlayerAddedToGame } = require("../../usecases/addPlayerToGame/PlayerAddedToGame");
-const { UserAlreadyInGame } = require("../../usecases/addPlayerToGame/UserAlreadyInGame");
+const { JoinGame } = require("../../usecases/joinGame/JoinGame");
+const { PlayerJoinedGame } = require("../../usecases/joinGame/PlayerJoinedGame");
+const { UserAlreadyInGame } = require("../../usecases/joinGame/UserAlreadyInGame");
 
 describe("AddPlayerToGame", () => {
-    /** @type {AddPlayerToGame} */
+    /** @type {JoinGame} */
     let addPlayerToGame;
     /** @type {FakeGameRepository} */
     let gameRepository;
@@ -78,7 +79,7 @@ describe("AddPlayerToGame", () => {
         expect(playerNotifierSpy.playersNotified).toEqual([
             {
                 userId: player1.id,
-                notification: new PlayerAddedToGame(gameId, player2.id),
+                notification: new PlayerJoinedGame(gameId, player2.id),
             },
         ]);
     });

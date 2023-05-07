@@ -2,7 +2,7 @@ const { Game } = require("../../entities/Game");
 const { User } = require("../../entities/User");
 const { UserNotFound } = require("../../repositories/UserRepositoryExceptions");
 const { UpdateGameUseCase } = require("../abstractUseCases/UpdateGameUseCase");
-const { PlayerAddedToGame } = require("./PlayerAddedToGame");
+const { PlayerJoinedGame } = require("./PlayerJoinedGame");
 const { UserAlreadyInGame } = require("./UserAlreadyInGame");
 
 /**
@@ -23,7 +23,7 @@ const { UserAlreadyInGame } = require("./UserAlreadyInGame");
  * @property {(playerId: string, notifiaction: any) => Promise<void>} notifyPlayer
  */
 
-exports.AddPlayerToGame = class AddPlayerToGame extends UpdateGameUseCase {
+exports.JoinGame = class JoinGame extends UpdateGameUseCase {
     #userRepository;
     #playerNotifier;
 
@@ -79,7 +79,7 @@ exports.AddPlayerToGame = class AddPlayerToGame extends UpdateGameUseCase {
      * @param {string[]} preExistingPlayers
      */
     async #notifyExistingPlayers(gameId, userId, preExistingPlayers) {
-        const notification = new PlayerAddedToGame(gameId, userId);
+        const notification = new PlayerJoinedGame(gameId, userId);
         const notifications = preExistingPlayers.map((preExistingPlayerId) =>
             this.#playerNotifier.notifyPlayer(preExistingPlayerId, notification)
         );

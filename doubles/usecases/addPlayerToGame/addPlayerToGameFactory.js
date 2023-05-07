@@ -1,12 +1,12 @@
-const AddPlayerToGameNamespace = require("../../../usecases/addPlayerToGame/AddPlayerToGame");
+const JoinGameNamespace = require("../../../usecases/joinGame/JoinGame");
 
 /**
  *
- * @param {AddPlayerToGameNamespace.GameRepository} gameRepository
- * @param {AddPlayerToGameNamespace.UserRepository} userRepository
- * @param {AddPlayerToGameNamespace.PlayerNotifier} playerNotifier
- * @returns {AddPlayerToGameNamespace.AddPlayerToGame}
+ * @param {import("../../../repositories/GameRepository").UpdateGameRepository} gameRepository
+ * @param {JoinGameNamespace.UserRepository} userRepository
+ * @param {JoinGameNamespace.PlayerNotifier} playerNotifier
+ * @returns {JoinGameNamespace.JoinGame}
  */
 exports.makeAddPlayerToGame = (gameRepository, userRepository, playerNotifier) => {
-    return new AddPlayerToGameNamespace.AddPlayerToGame(gameRepository, userRepository, playerNotifier);
+    return new JoinGameNamespace.JoinGame(gameRepository, userRepository, playerNotifier);
 };

@@ -1,4 +1,4 @@
-exports.PlayerAddedToGame = class PlayerAddedToGame {
+exports.PlayerJoinedGame = class PlayerJoinedGame {
     /**
      *
      * @param {string} gameId The id of the game that the player was added to.
