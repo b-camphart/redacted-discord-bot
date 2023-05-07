@@ -104,7 +104,7 @@ class Game {
 
         if (this.playerActivity(playerId) !== PlayerActivity.StartingStory) throw new InvalidPlayerActivity();
 
-        this.#stories.push(Story.new(content, playerId, this.#users));
+        this.#stories.push(Story.start(content, playerId, this.#users));
     }
 
     /**

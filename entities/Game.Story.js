@@ -14,24 +14,55 @@ const { StoryStatus, StoryStatusWithCorrespondingActivity } = require("./Game.St
  * @prop {StoryStatus} status
  */
 
+/**
+ * A story within a game.  Has multiple entries and is responsible for making sure that the correct player makes the correct change in the correct order.
+ */
 class Story {
     #entries;
     #playerIds;
     #status;
 
     /**
+     * Start a new story.
      *
      * @param {string} content
      * @param {string} creatorId
      * @param {string[]} playerIds
+     * @returns {Story}
      */
-    static new(content, creatorId, playerIds) {
+    static start(content, creatorId, playerIds) {
         param("content", content).isRequired().mustBeString();
         param("creatorId", creatorId).isRequired().mustBeString();
-        param("playerIds", playerIds).isRequired().mustBeArray();
+        this.#validatePlayerIds(playerIds);
         const firstEntry = StoryEntry.new(content, creatorId);
         const nextPlayer = Story.#getNextPlayerId(playerIds, creatorId);
         return new Story([firstEntry], playerIds, StoryStatus.Redact(nextPlayer, content));
+    }
+
+    /**
+     * Validates that the story entry snapshots is an array of objects with required fields.
+     *
+     * @param {StoryEntrySnapshot[]} entries
+     */
+    static #validateEntries(entries) {
+        const entriesParam = param("entries", entries).mustBeArray();
+        mustHaveLengthInRange(entriesParam, inclusive(1));
+        eachValueOf(entriesParam, (it) => {
+            it.mustBeObject();
+            it.mustHaveProperty("initialContent").mustBeString();
+            const contributorsProp = it.mustHaveProperty("contributors").mustBeArray();
+            mustHaveLengthInRange(contributorsProp, inclusive(1));
+            eachValueOf(contributorsProp, (it) => it.mustBeString());
+        });
+    }
+
+    /**
+     * Validates that the provided playerIds is an array of strings.
+     *
+     * @param {string[]} playerIds
+     */
+    static #validatePlayerIds(playerIds) {
+        eachValueOf(param("playerIds", playerIds).isRequired().mustBeArray(), (it) => it.mustBeString());
     }
 
     /**
@@ -41,16 +72,8 @@ class Story {
      * @param {StoryStatus} status
      */
     constructor(entries, playerIds, status) {
-        const entriesParam = param("entries", entries).mustBeArray();
-        mustHaveLengthInRange(entriesParam, inclusive(1));
-        eachValueOf(entriesParam, (it) => {
-            mustBeType("object", it.value, it.name);
-            const contributorsProp = it.mustHaveProperty("contributors").mustBeArray();
-            mustHaveLengthInRange(contributorsProp, inclusive(1));
-            eachValueOf(contributorsProp, (it) => it.mustBeString());
-            it.mustHaveProperty("initialContent").mustBeString();
-        });
-        eachValueOf(param("playerIds", playerIds).isRequired().mustBeArray(), (it) => it.mustBeString());
+        Story.#validateEntries(entries);
+        Story.#validatePlayerIds(playerIds);
         this.#entries = entries.map((entry) => StoryEntry.fromSnapshot(entry));
         this.#playerIds = playerIds;
         this.#status = status;
@@ -59,7 +82,7 @@ class Story {
     /**
      *
      * @param {string} playerId
-     * @returns
+     * @returns {boolean}
      */
     wasStartedBy(playerId) {
         return this.#entries[0].contributors[0] === playerId;
@@ -156,11 +179,28 @@ class Story {
 
     /**
      *
-     * @param {string} currentPlayerId
-     * @returns {string}
+     * @param {string} playerId
      */
-    #getNextPlayer(currentPlayerId) {
-        return Story.#getNextPlayerId(this.#playerIds, currentPlayerId);
+    #ensureCurrentlyAssignedTo(playerId) {
+        if (!this.isAssignedTo(playerId)) throw new InvalidPlayerActivity();
+    }
+
+    /**
+     *
+     * @param {string} action
+     */
+    #ensureRequiresAction(action) {
+        if (!this.requiresAction(action)) throw new InvalidPlayerActivity(action, this.requiredAction);
+    }
+
+    /**
+     *
+     * @param {number} entryIndex
+     */
+    #getEntryOrThrow(entryIndex) {
+        const entry = this.#entries[entryIndex];
+        if (entry === undefined) throw "Entry not found in story.";
+        return entry;
     }
 
     /**
@@ -169,15 +209,14 @@ class Story {
      * @param {number[]} wordIndices
      */
     censor(playerId, wordIndices) {
-        if (!this.isAssignedTo(playerId) || !this.requiresAction("redact"))
-            throw new InvalidPlayerActivity("redact", this.requiredAction);
+        this.#ensureCurrentlyAssignedTo(playerId);
+        this.#ensureRequiresAction("redact");
 
-        const entry = this.#entries[0];
-        if (entry === undefined) throw "Entry not found in story.";
+        const entry = this.#getEntryOrThrow(0);
 
         const { censoredContent, censors } = entry.censor(playerId, wordIndices);
 
-        const nextPlayer = this.#getNextPlayer(this.#status.playerId);
+        const nextPlayer = Story.#getNextPlayerId(this.#playerIds, this.assignedTo);
 
         this.#status = StoryStatus.RepairCensor(nextPlayer, censoredContent, censors);
     }
@@ -188,14 +227,14 @@ class Story {
      * @param {number} truncationCount
      */
     truncate(playerId, truncationCount) {
-        if (!this.isAssignedTo(playerId) || !this.requiresAction("redact"))
-            throw new InvalidPlayerActivity("redact", this.requiredAction);
+        this.#ensureCurrentlyAssignedTo(playerId);
+        this.#ensureRequiresAction("redact");
 
-        const entry = this.#entries[0];
-        if (entry === undefined) throw "Entry not found in story.";
+        const entry = this.#getEntryOrThrow(0);
 
         const { censoredContent, truncateFrom } = entry.truncate(playerId, truncationCount);
-        const nextPlayer = this.#getNextPlayer(this.#status.playerId);
+
+        const nextPlayer = Story.#getNextPlayerId(this.#playerIds, this.assignedTo);
         this.#status = StoryStatus.RepairTruncation(nextPlayer, censoredContent, truncateFrom);
     }
 
@@ -206,18 +245,17 @@ class Story {
      * @param {string | string[]} replacement
      */
     repair(maxEntries, playerId, replacement) {
-        if (!this.isAssignedTo(playerId) || !this.requiresAction("repair"))
-            throw new InvalidPlayerActivity("repair", this.requiredAction);
+        this.#ensureCurrentlyAssignedTo(playerId);
+        this.#ensureRequiresAction("repair");
 
-        const entry = this.#entries[0];
-        if (entry === undefined) throw "Entry not found in story.";
+        const entry = this.#getEntryOrThrow(0);
 
         const repairedContent = entry.repair(playerId, replacement);
 
         if (this.#entries.length === maxEntries) {
             this.#status = StoryStatus.Completed;
         } else {
-            const nextPlayer = this.#getNextPlayer(this.#status.playerId);
+            const nextPlayer = Story.#getNextPlayerId(this.#playerIds, this.assignedTo);
             this.#status = StoryStatus.Continue(nextPlayer, repairedContent);
         }
     }
@@ -228,9 +266,10 @@ class Story {
      * @param {string} playerId
      */
     continue(content, playerId) {
-        if (!this.isAssignedTo(playerId) || !this.requiresAction("continue"))
-            throw new InvalidPlayerActivity("continue", this.requiredAction);
-        const nextPlayer = this.#getNextPlayer(this.#status.playerId);
+        this.#ensureCurrentlyAssignedTo(playerId);
+        this.#ensureRequiresAction("continue");
+
+        const nextPlayer = Story.#getNextPlayerId(this.#playerIds, this.assignedTo);
         this.#status = StoryStatus.Redact(nextPlayer, this.#entries[0].initialContent);
         this.#entries.push(StoryEntry.new(content, playerId));
     }

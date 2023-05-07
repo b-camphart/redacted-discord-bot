@@ -1,3 +1,5 @@
+const { IndexOutOfBounds } = require("../usecases/validation");
+
 const ParamValidation = require("./index").ParamValidation;
 
 class OutOfRange extends Error {
@@ -39,6 +41,53 @@ exports.mustBeInRange = (validation, start, end) => {
             throw new OutOfRange(`${validation.name} <${validation.value}> must be less than ${end.value}.`);
     }
     return validation;
+};
+
+/**
+ *
+ * @param {ParamValidation<number>} validation
+ * @param {number} comparison
+ * @returns
+ */
+exports.mustBeGreaterThan = (validation, comparison) => {
+    if (validation.value === undefined || typeof validation.value !== "number") return this;
+    if (validation.value <= comparison)
+        throw new IndexOutOfBounds(`${validation.name} must be greater than ${comparison}`);
+};
+/**
+ *
+ * @param {ParamValidation<number>} validation
+ * @param {number} comparison
+ * @returns
+ */
+exports.mustBeGreaterThanOrEqualTo = (validation, comparison) => {
+    if (validation.value === undefined || typeof validation.value !== "number") return this;
+    if (validation.value < comparison)
+        throw new IndexOutOfBounds(`${validation.name} must be greater than or equal to ${comparison}`);
+};
+
+/**
+ *
+ * @param {ParamValidation<number>} validation
+ * @param {number} comparison
+ * @returns
+ */
+exports.mustBeLessThan = (validation, comparison) => {
+    if (validation.value === undefined || typeof validation.value !== "number") return this;
+    if (validation.value >= comparison)
+        throw new IndexOutOfBounds(`${validation.name} must be less than ${comparison}`);
+};
+
+/**
+ *
+ * @param {ParamValidation<number>} validation
+ * @param {number} comparison
+ * @returns
+ */
+exports.mustBeLessThanOrEqualTo = (validation, comparison) => {
+    if (validation.value === undefined || typeof validation.value !== "number") return this;
+    if (validation.value > comparison)
+        throw new IndexOutOfBounds(`${validation.name} must be less than or equal to ${comparison}`);
 };
 
 /**

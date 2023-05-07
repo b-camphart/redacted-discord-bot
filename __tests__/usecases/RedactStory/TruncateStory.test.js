@@ -121,7 +121,7 @@ describe("Truncate a Story", () => {
                     game.startStory("user-id", "content-0");
                     const action = redactStory.truncateStory(game.id, "user-id", 0, 5);
                     await expect(action).rejects.toThrow(IndexOutOfBounds);
-                    await expect(action).rejects.toThrow("truncationCount must be less than <5>.");
+                    await expect(action).rejects.toThrow("truncationCount must be less than 5");
                 });
 
                 describe("given the player and previous player have started a story", () => {

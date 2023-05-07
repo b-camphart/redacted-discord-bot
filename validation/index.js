@@ -67,6 +67,17 @@ ParamValidation.prototype.mustBeArray = function () {
 exports.ParamValidation = ParamValidation;
 
 /**
+ * @template T
+ * @returns {ParamValidation<T>}
+ */
+ParamValidation.prototype.mustBeObject = function () {
+    exports.mustBeType("object", this.value, this.name);
+    return this;
+};
+
+exports.ParamValidation = ParamValidation;
+
+/**
  *
  * @param {string} propertyName
  * @returns {ParamValidation<unknown>}

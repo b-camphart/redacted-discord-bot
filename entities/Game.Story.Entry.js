@@ -2,6 +2,7 @@ const { IndexOutOfBounds } = require("../usecases/validation");
 const { repeat } = require("../utils/iteration");
 const { param } = require("../validation");
 const { eachValueOf, mustHaveLength } = require("../validation/arrays");
+const { mustBeInRange, exclusive, mustBeLessThan } = require("../validation/numbers");
 const { censorableWords } = require("./Words");
 
 /**
@@ -66,20 +67,8 @@ class StoryEntry {
      */
     censor(playerId, wordIndices) {
         const wordBoundaries = censorableWords(this.initialContent);
-
-        wordIndices.forEach((wordIndex) => {
-            if (wordIndex < 0 || wordIndex >= wordBoundaries.length) throw new IndexOutOfBounds("");
-        });
-
-        const censors = wordIndices.map((index) => wordBoundaries[index]);
-
-        let censoredContent = this.initialContent;
-        censors.forEach((boundary) => {
-            let censor = "";
-            repeat(boundary[1] - boundary[0], () => (censor += "_"));
-            censoredContent =
-                censoredContent.substring(0, boundary[0]) + censor + censoredContent.substring(boundary[1]);
-        });
+        const censors = this.#getCensoredWordBoundaries(wordIndices, wordBoundaries);
+        const censoredContent = this.#censorInitialContent(censors);
 
         this.censors = censors;
         this.contributors.push(playerId);
@@ -89,26 +78,60 @@ class StoryEntry {
 
     /**
      *
+     * @param {number[]} wordIndices
+     * @param {[number, number][]} wordBoundaries
+     * @returns
+     */
+    #getCensoredWordBoundaries(wordIndices, wordBoundaries) {
+        return wordIndices.map((wordIndex) => {
+            if (wordIndex < 0 || wordIndex >= wordBoundaries.length) throw new IndexOutOfBounds("");
+            return wordBoundaries[wordIndex];
+        });
+    }
+
+    /**
+     *
+     * @param {[number, number][]} censors
+     * @returns
+     */
+    #censorInitialContent(censors) {
+        return censors.reduce((content, boundary) => {
+            let censor = "";
+            repeat(boundary[1] - boundary[0], () => (censor += "_"));
+            return content.substring(0, boundary[0]) + censor + content.substring(boundary[1]);
+        }, this.initialContent);
+    }
+
+    /**
+     *
      * @param {string} playerId
      * @param {number} truncationCount
+     *
+     * @returns {{ censoredContent: string, truncateFrom: number }}
      */
     truncate(playerId, truncationCount) {
         const wordBoundaries = censorableWords(this.initialContent);
-
-        if (truncationCount >= wordBoundaries.length)
-            throw new IndexOutOfBounds(`truncationCount must be less than <${wordBoundaries.length}>.`);
+        mustBeLessThan(param("truncationCount", truncationCount).mustBeNumber(), wordBoundaries.length);
 
         const truncateFrom = wordBoundaries.at(-truncationCount)?.at(0);
-        if (truncateFrom === undefined) throw "Could not find index to truncate from.";
-        let censor = "";
-        repeat(this.initialContent.length - truncateFrom, () => (censor += "_"));
-        const censoredContent = this.initialContent.substring(0, truncateFrom) + censor;
+        if (truncateFrom === undefined)
+            throw `Illegal state.  Word boundaries does not have element at index ${-truncationCount}`;
+        const censoredContent = this.#truncateInitialContent(truncateFrom);
 
-        // @ts-ignore
-        this.censors = [truncateFrom, censoredContent.length];
+        this.censors = /** @type {[number, number]} */ ([truncateFrom, censoredContent.length]);
         this.contributors.push(playerId);
 
         return { censoredContent, truncateFrom };
+    }
+
+    /**
+     *
+     * @param {number} truncateFrom
+     */
+    #truncateInitialContent(truncateFrom) {
+        let censor = "";
+        repeat(this.initialContent.length - truncateFrom, () => (censor += "_"));
+        return this.initialContent.substring(0, truncateFrom) + censor;
     }
 
     /**
@@ -117,43 +140,68 @@ class StoryEntry {
      * @param {string | string[]} replacement
      */
     repair(playerId, replacement) {
-        let repairedContent = this.initialContent;
+        const censors = this.#getCensorBoundariesOrThrow();
 
-        const censors = this.censors;
-        if (censors === undefined) throw "Censors have not been defined yet.";
-
-        if (censors.length === 2 && typeof censors[0] === "number" && typeof censors[1] === "number") {
-            replacement = /** @type {string} */ (param("replacement", replacement).isRequired().mustBeString().value);
-            repairedContent = repairedContent.substring(0, censors[0]) + replacement;
-
-            /** @type {[number, number]} */ (censors)[1] = repairedContent.length;
+        let repairedContent;
+        const expectingTruncation =
+            censors.length === 2 && typeof censors[0] === "number" && typeof censors[1] === "number";
+        if (expectingTruncation) {
+            repairedContent = this.#repairTruncation(replacement, /** @type {[number, number]} */ (censors));
         } else {
-            const replacementParam = param("replacements", replacement).isRequired().mustBeArray();
-            eachValueOf(replacementParam, (it) => it.mustBeString());
-            mustHaveLength(replacementParam, censors.length);
-            replacement = /** @type {string[]} */ (replacementParam.value);
-
-            Array.from(/** @type {[Number, number][]} */ (censors))
-                .reverse()
-                .forEach((boundary, index) => {
-                    repairedContent =
-                        repairedContent.substring(0, boundary[0]) +
-                        replacement[index] +
-                        repairedContent.substring(boundary[1]);
-                });
-
-            /** @type {[Number, number][]} */ (censors).reduce((offset, boundary, index) => {
-                const currentReplacement = replacement[index];
-                censors[index] = [boundary[0] + offset, boundary[0] + offset + currentReplacement.length];
-
-                return offset + (currentReplacement.length - (boundary[1] - boundary[0]));
-            }, 0);
+            repairedContent = this.#repairCensor(replacement, /** @type {[Number, number][]} */ (censors));
         }
 
         this.contributors.push(playerId);
         this.finalContent = repairedContent;
 
         return repairedContent;
+    }
+
+    /**
+     *
+     * @param {string | string[]} replacements
+     * @param {[number, number][]} censors
+     * @returns
+     */
+    #repairCensor(replacements, censors) {
+        const replacementParam = param("replacements", replacements).isRequired().mustBeArray();
+        eachValueOf(replacementParam, (it) => it.mustBeString());
+        mustHaveLength(replacementParam, censors.length);
+        replacements = /** @type {string[]} */ (replacementParam.value);
+
+        const repairedContent = Array.from(censors)
+            .reverse()
+            .reduce((content, boundary, index) => {
+                return content.substring(0, boundary[0]) + replacements[index] + content.substring(boundary[1]);
+            }, this.initialContent);
+
+        censors.reduce((offset, boundary, index) => {
+            const currentReplacement = replacements[index];
+            censors[index] = [boundary[0] + offset, boundary[0] + offset + currentReplacement.length];
+
+            return offset + (currentReplacement.length - (boundary[1] - boundary[0]));
+        }, 0);
+        return repairedContent;
+    }
+
+    /**
+     *
+     * @param {string | string[]} replacement
+     * @param {[number, number]} censors
+     * @returns
+     */
+    #repairTruncation(replacement, censors) {
+        replacement = param("replacement", replacement).isRequired().mustBeString().value;
+        const repairedContent = this.initialContent.substring(0, censors[0]) + replacement;
+
+        censors[1] = repairedContent.length;
+        return repairedContent;
+    }
+
+    #getCensorBoundariesOrThrow() {
+        const censors = this.censors;
+        if (censors === undefined) throw "Censors have not been defined yet.";
+        return censors;
     }
 
     /**
