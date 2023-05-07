@@ -40,7 +40,7 @@ describe("AddPlayerToGame", () => {
     test("user must not already be in the game", async () => {
         const userId = (await userRepository.add(new User())).id;
         const game = new Game();
-        game.addUser(userId);
+        game.addPlayer(userId);
         const gameId = (await gameRepository.add(game)).id;
 
         await expect(addPlayerToGame.addPlayer(gameId, userId)).rejects.toThrow(UserAlreadyInGame);
@@ -50,7 +50,7 @@ describe("AddPlayerToGame", () => {
         const userId = (await userRepository.add(new User())).id;
         const game = new Game();
         for (let i = 0; i < 4; i++) {
-            game.addUser(`${i}`);
+            game.addPlayer(`${i}`);
         }
         game.start();
         const gameId = (await gameRepository.add(game)).id;
@@ -63,7 +63,7 @@ describe("AddPlayerToGame", () => {
         const gameId = (await gameRepository.add(new Game())).id;
 
         const updatedGame = await addPlayerToGame.addPlayer(gameId, userId);
-        expect(updatedGame.hasUser(userId)).toBe(true);
+        expect(updatedGame.hasPlayer(userId)).toBe(true);
         expect(await gameRepository.get(gameId)).toEqual(updatedGame);
     });
 

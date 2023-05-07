@@ -1,23 +1,24 @@
-const { makeGame } = require("../../doubles/entities/makeGame");
-const { FakeGameRepository } = require("../../doubles/repositories/FakeGameRepository");
-const { UserNotInGame, Game, InvalidPlayerActivity } = require("../../entities/Game");
-const { PlayerActivity } = require("../../entities/Game.PlayerActivity");
-const { StoryStatus } = require("../../entities/Game.StoryStatus");
-const { GameNotFound } = require("../../repositories/GameRepositoryExceptions");
-const { RepairStory } = require("../../usecases/RepairStory");
-const { contract, isRequired, mustBeString } = require("../contracts");
+const { makeGame } = require("../../../doubles/entities/makeGame");
+const { FakeGameRepository } = require("../../../doubles/repositories/FakeGameRepository");
+const { Game } = require("../../../entities/Game");
+const { UserNotInGame, InvalidPlayerActivity } = require("../../../entities/Game.Exceptions");
+const { PlayerActivity } = require("../../../entities/Game.PlayerActivity");
+const { StoryStatus } = require("../../../entities/Game.Story.Status");
+const { GameNotFound } = require("../../../repositories/GameRepositoryExceptions");
+const { RepairStory } = require("../../../usecases/RepairStory");
+const { contract, isRequired, mustBeString, mustBeNumber, mustBeArray } = require("../../contracts");
 
-describe("Repair a Story", () => {
-    /** @type {FakeGameRepository} */
-    let games;
-    /** @type {RepairStory} */
-    let repairStory;
+/** @type {FakeGameRepository} */
+let games;
+/** @type {RepairStory} */
+let repairStory;
 
-    beforeEach(() => {
-        games = new FakeGameRepository();
-        repairStory = new RepairStory(games);
-    });
+beforeEach(() => {
+    games = new FakeGameRepository();
+    repairStory = new RepairStory(games);
+});
 
+describe("Repair a Truncated Story", () => {
     describe("contract", () => {
         contract("gameId", (name) => {
             isRequired(name, () => {
@@ -39,10 +40,20 @@ describe("Repair a Story", () => {
                 return repairStory.repairStory("game-id", playerId);
             });
         });
+        contract("storyIndex", (name) => {
+            isRequired(name, () => {
+                // @ts-ignore
+                return repairStory.repairStory("game-id", "player-id");
+            });
+            mustBeNumber(name, (nonNumber) => {
+                // @ts-ignore
+                return repairStory.repairStory("game-id", "player-id", nonNumber);
+            });
+        });
     });
 
     test("game must exist", async () => {
-        const rejection = expect(repairStory.repairStory("unknown-game-id", "user-id", 0)).rejects;
+        const rejection = expect(repairStory.repairStory("unknown-game-id", "user-id", 0, "replaced")).rejects;
         await rejection.toThrow(GameNotFound);
     });
 
@@ -54,30 +65,30 @@ describe("Repair a Story", () => {
         });
 
         test("player must be in the game", async () => {
-            const rejection = expect(repairStory.repairStory(game.id, "unknown-user-id", 0)).rejects;
+            const rejection = expect(repairStory.repairStory(game.id, "unknown-user-id", 0, "replaced")).rejects;
             await rejection.toThrow(UserNotInGame);
         });
 
         describe("given the user is in the game", () => {
             beforeEach(() => {
-                game.addUser("user-id");
+                game.addPlayer("user-id");
             });
 
             test("the game must have started", async () => {
-                const rejection = expect(repairStory.repairStory(game.id, "user-id", 0)).rejects;
+                const rejection = expect(repairStory.repairStory(game.id, "user-id", 0, "replaced")).rejects;
                 await rejection.toThrow(InvalidPlayerActivity);
             });
 
             describe("given the game has started", () => {
                 beforeEach(() => {
-                    game.addUser("player-2");
-                    game.addUser("player-3");
-                    game.addUser("player-4");
+                    game.addPlayer("player-2");
+                    game.addPlayer("player-3");
+                    game.addPlayer("player-4");
                     game.start();
                 });
 
                 test("the player must have started a story", async () => {
-                    const rejection = expect(repairStory.repairStory(game.id, "user-id", 0)).rejects;
+                    const rejection = expect(repairStory.repairStory(game.id, "user-id", 0, "replaced")).rejects;
                     await rejection.toThrow(InvalidPlayerActivity);
                 });
 
@@ -87,7 +98,7 @@ describe("Repair a Story", () => {
                     });
 
                     test("a story must be assigned to the player for repair", async () => {
-                        const rejection = expect(repairStory.repairStory(game.id, "user-id", 0)).rejects;
+                        const rejection = expect(repairStory.repairStory(game.id, "user-id", 0, "replaced")).rejects;
                         await rejection.toThrow(InvalidPlayerActivity);
                     });
 
@@ -95,24 +106,41 @@ describe("Repair a Story", () => {
                         beforeEach(() => {
                             game.startStory("player-3", "content two");
                             game.startStory("player-4", "content four");
-                            game.censorStory("player-4", 1, [1]);
+                            game.truncateStory("player-4", 1, 1);
                         });
 
                         test("the storyIndex must be the assigned story to repair", async () => {
-                            const rejection = expect(repairStory.repairStory(game.id, "user-id", 2)).rejects;
+                            const rejection = expect(
+                                repairStory.repairStory(game.id, "user-id", 2, "replaced")
+                            ).rejects;
                             await rejection.toThrow(InvalidPlayerActivity);
                         });
 
+                        contract("replacement", (name) => {
+                            isRequired(name, () => {
+                                // @ts-ignore
+                                return repairStory.repairStory(game.id, "user-id", 1);
+                            });
+                            mustBeString(name, (nonString) => {
+                                return repairStory.repairStory(game.id, "user-id", 1, nonString);
+                            });
+                        });
+
                         test("the player is redacting a story", async () => {
-                            await repairStory.repairStory(game.id, "user-id", 1);
+                            await repairStory.repairStory(game.id, "user-id", 1, "replaced");
                             const savedGame = (await games.get(game.id)) || fail("failed to get game.");
-                            expect(savedGame.userActivity("user-id")).toEqual(PlayerActivity.RedactingStory(2));
+                            expect(savedGame.playerActivity("user-id")).toEqual(
+                                PlayerActivity.RedactingStory(2, "content four")
+                            );
                         });
 
                         test("the story is awaiting a continuation from the next player", async () => {
-                            await repairStory.repairStory(game.id, "user-id", 1);
+                            await repairStory.repairStory(game.id, "user-id", 1, "replaced");
                             const savedGame = (await games.get(game.id)) || fail("failed to get game.");
-                            expect(savedGame.storyStatus(1)).toEqual(StoryStatus.Continue("player-2"));
+                            expect(savedGame.storyActionRequired(1)).toEqual(StoryStatus.Continue.action);
+                            expect(savedGame.playerAssignedToStory(1)).toEqual("player-2");
+
+                            //("player-2", "content replaced")
                         });
 
                         describe("the player already redacted the other story", () => {
@@ -121,9 +149,9 @@ describe("Repair a Story", () => {
                             });
 
                             test("the player is awaiting a story", async () => {
-                                await repairStory.repairStory(game.id, "user-id", 1);
+                                await repairStory.repairStory(game.id, "user-id", 1, "replaced");
                                 const savedGame = (await games.get(game.id)) || fail("failed to get game.");
-                                expect(savedGame.userActivity("user-id")).toEqual(PlayerActivity.AwaitingStory);
+                                expect(savedGame.playerActivity("user-id")).toEqual(PlayerActivity.AwaitingStory);
                             });
                         });
 
@@ -133,9 +161,9 @@ describe("Repair a Story", () => {
                             });
 
                             test("the story is completed", async () => {
-                                await repairStory.repairStory(game.id, "user-id", 1);
+                                await repairStory.repairStory(game.id, "user-id", 1, "replaced");
                                 const savedGame = (await games.get(game.id)) || fail("failed to get game.");
-                                expect(savedGame.storyStatus(1)).toEqual(StoryStatus.Completed);
+                                expect(savedGame.storyActionRequired(1)).toEqual(StoryStatus.Completed.action);
                             });
                         });
                     });

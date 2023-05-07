@@ -1,10 +1,11 @@
 const { makeGame } = require("../../doubles/entities/makeGame");
 const { FakeGameRepository } = require("../../doubles/repositories/FakeGameRepository");
 const { PlayerNotifierSpy, DumbPlayerNotifier } = require("../../doubles/repositories/PlayerNotifierDoubles");
-const { NotEnoughPlayersToStartGame, GameAlreadyStarted, UserNotInGame } = require("../../entities/Game");
+const { UserNotInGame, GameAlreadyStarted } = require("../../entities/Game.Exceptions");
 const { PlayerActivity } = require("../../entities/Game.PlayerActivity");
 const { GameNotFound } = require("../../repositories/GameRepositoryExceptions");
-const { StartGame } = require("../../usecases/StartGame");
+const { StartGame } = require("../../usecases/startGame/StartGame");
+const { NotEnoughPlayersToStartGame } = require("../../usecases/startGame/validation");
 const { contract, isRequired, mustBeString } = require("../contracts");
 
 describe("Start Game", () => {
@@ -63,8 +64,8 @@ describe("Start Game", () => {
         describe("given the player is in the game", () => {
             const addNewPlayerToGame = async () => {
                 const game = (await gameRepository.get(gameId)) || fail(new GameNotFound(gameId));
-                const playerId = `player-${game.users().length + 1}`;
-                game.addUser(playerId);
+                const playerId = `player-${game.playerIds().length + 1}`;
+                game.addPlayer(playerId);
                 await gameRepository.replace(game);
                 return playerId;
             };
@@ -98,8 +99,8 @@ describe("Start Game", () => {
                 test("each player is starting a story", async () => {
                     await startGame.startGame(gameId, playerId);
                     const updatedGame = (await gameRepository.get(gameId)) || fail(new GameNotFound(gameId));
-                    updatedGame.users().forEach((userIdInGame) => {
-                        expect(updatedGame.userActivity(userIdInGame)).toBe(PlayerActivity.StartingStory);
+                    updatedGame.playerIds().forEach((userIdInGame) => {
+                        expect(updatedGame.playerActivity(userIdInGame)).toBe(PlayerActivity.StartingStory);
                     });
                 });
 

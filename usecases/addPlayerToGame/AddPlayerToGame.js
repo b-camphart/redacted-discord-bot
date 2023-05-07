@@ -1,18 +1,12 @@
 const { Game } = require("../../entities/Game");
 const { User } = require("../../entities/User");
-const { GameNotFound } = require("../../repositories/GameRepositoryExceptions");
 const { UserNotFound } = require("../../repositories/UserRepositoryExceptions");
+const { UpdateGameUseCase } = require("../abstractUseCases/UpdateGameUseCase");
 const { PlayerAddedToGame } = require("./PlayerAddedToGame");
 const { UserAlreadyInGame } = require("./UserAlreadyInGame");
 
 /**
  * @typedef {Game & { id: string }} GameWithId
- */
-
-/**
- * @typedef {Object} GameRepository
- * @property {(gameId: string) => Promise<GameWithId | undefined>} get
- * @property {(game: GameWithId) => Promise<void>} replace
  */
 
 /**
@@ -29,19 +23,18 @@ const { UserAlreadyInGame } = require("./UserAlreadyInGame");
  * @property {(playerId: string, notifiaction: any) => Promise<void>} notifyPlayer
  */
 
-exports.AddPlayerToGame = class AddPlayerToGame {
-    #gameRepository;
+exports.AddPlayerToGame = class AddPlayerToGame extends UpdateGameUseCase {
     #userRepository;
     #playerNotifier;
 
     /**
      *
-     * @param {GameRepository} gameRepository
+     * @param {import("../../repositories/GameRepository").UpdateGameRepository} gameRepository
      * @param {UserRepository} userRepository
      * @param {PlayerNotifier} playerNotifier
      */
     constructor(gameRepository, userRepository, playerNotifier) {
-        this.#gameRepository = gameRepository;
+        super(gameRepository);
         this.#userRepository = userRepository;
         this.#playerNotifier = playerNotifier;
     }
@@ -56,14 +49,14 @@ exports.AddPlayerToGame = class AddPlayerToGame {
      * @throws {UserAlreadyInGame} if the user is already in the game
      */
     async addPlayer(gameId, userId) {
-        const game = await this.#getGame(gameId);
+        const game = await this._getGameOrThrow(gameId);
         this.#assertUserNotInGame(game, userId);
         const user = await this.#getUser(userId);
 
-        const preExistingPlayers = game.users();
+        const preExistingPlayers = game.playerIds();
 
-        game.addUser(user.id);
-        this.#gameRepository.replace(game);
+        game.addPlayer(user.id);
+        this._games.replace(game);
 
         await this.#notifyExistingPlayers(gameId, userId, preExistingPlayers);
 
@@ -76,7 +69,7 @@ exports.AddPlayerToGame = class AddPlayerToGame {
      * @param {string} userId
      */
     #assertUserNotInGame(game, userId) {
-        if (game.hasUser(userId)) throw new UserAlreadyInGame(game.id, userId);
+        if (game.hasPlayer(userId)) throw new UserAlreadyInGame(game.id, userId);
     }
 
     /**
@@ -91,18 +84,6 @@ exports.AddPlayerToGame = class AddPlayerToGame {
             this.#playerNotifier.notifyPlayer(preExistingPlayerId, notification)
         );
         await Promise.allSettled(notifications);
-    }
-
-    /**
-     *
-     * @param {string} gameId
-     * @returns {Promise<GameWithId>}
-     * @throws {GameNotFound} if the game does not exist
-     */
-    async #getGame(gameId) {
-        const game = await this.#gameRepository.get(gameId);
-        if (game === undefined) throw new GameNotFound(gameId);
-        return game;
     }
 
     /**

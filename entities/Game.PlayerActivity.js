@@ -8,6 +8,15 @@
  * @prop {number} storyIndex
  */
 
+/** @typedef {FinishedStoryEntry[]} FinishedStory */
+
+/**
+ * @typedef {Object} FinishedStoryEntry
+ * @prop {string} content
+ * @prop {[number, number][]} censors
+ * @prop {string[]} contributors
+ */
+
 exports.PlayerActivity = Object.freeze({
     AwaitingStart: Object.freeze({ activity: "awaiting-start" }),
     StartingStory: Object.freeze({ activity: "starting-story" }),
@@ -15,11 +24,13 @@ exports.PlayerActivity = Object.freeze({
     /**
      *
      * @param {number} storyIndex
+     * @param {string} entryContent
      */
-    RedactingStory: (storyIndex) => {
+    RedactingStory: (storyIndex, entryContent) => {
         return Object.freeze({
             activity: "redacting-story",
             storyIndex,
+            entryContent,
         });
     },
     /**
@@ -32,15 +43,43 @@ exports.PlayerActivity = Object.freeze({
             storyIndex,
         });
     },
+    /**
+     *
+     * @param {number} storyIndex
+     * @param {string} censoredContent
+     * @param {[number, number][]} censors
+     */
+    RepairingCensoredStory: (storyIndex, censoredContent, censors) => {
+        return Object.freeze({
+            activity: "repairing-censored-story",
+            storyIndex,
+            censoredContent,
+            censors,
+        });
+    },
 
     /**
      *
      * @param {number} storyIndex
+     * @param {string} repairedContent
      */
-    ContinuingStory: (storyIndex) => {
+    ContinuingStory: (storyIndex, repairedContent) => {
         return Object.freeze({
             activity: "continuing-story",
             storyIndex,
+            repairedContent,
+        });
+    },
+
+    /**
+     *
+     * @param {FinishedStory[]} stories
+     * @returns
+     */
+    ReadingFinishedStories: (stories) => {
+        return Object.freeze({
+            activity: "reading-finished-stories",
+            stories,
         });
     },
 });

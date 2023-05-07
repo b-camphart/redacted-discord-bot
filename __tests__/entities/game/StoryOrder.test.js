@@ -10,18 +10,18 @@ describe("Story Order", () => {
 
     beforeEach(() => {
         game = makeGame();
-        players.forEach((playerId) => game.addUser(playerId));
+        players.forEach((playerId) => game.addPlayer(playerId));
         game.start();
         game.startStory("player-1", "content-1");
     });
 
     test("the next player is selected to act on the story", () => {
         game.startStory("player-2", "content-2");
-        expect(game.userActivity("player-2")).toEqual(PlayerActivity.RedactingStory(0));
+        expect(game.playerActivity("player-2")).toEqual(PlayerActivity.RedactingStory(0, "content-1"));
     });
 
     test("the first player is selected to act on the last story", () => {
         game.startStory("player-4", "content-4");
-        expect(game.userActivity("player-1")).toEqual(PlayerActivity.RedactingStory(1));
+        expect(game.playerActivity("player-1")).toEqual(PlayerActivity.RedactingStory(1, "content-4"));
     });
 });

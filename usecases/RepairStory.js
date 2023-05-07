@@ -1,17 +1,12 @@
-const { UserNotInGame, InvalidPlayerActivity } = require("../entities/Game");
-const { isSameActivity, PlayerActivity } = require("../entities/Game.PlayerActivity");
-const { GameNotFound } = require("../repositories/GameRepositoryExceptions");
-const { param } = require("../validation");
+const { PlayerInGameUpdatesStoryUseCase } = require("./abstractUseCases/PlayerInGameUpdatesStoryUseCase");
 
-exports.RepairStory = class RepairStory {
-    #games;
-
+exports.RepairStory = class RepairStory extends PlayerInGameUpdatesStoryUseCase {
     /**
      *
      * @param {import("../repositories/GameRepository").UpdateGameRepository} gameRepository
      */
     constructor(gameRepository) {
-        this.#games = gameRepository;
+        super(gameRepository);
     }
 
     /**
@@ -19,36 +14,16 @@ exports.RepairStory = class RepairStory {
      * @param {string} gameId
      * @param {string} playerId
      * @param {number} storyIndex
+     * @param {string | string[]} replacements
      */
-    async repairStory(gameId, playerId, storyIndex) {
-        this.#validateGameId(gameId);
-        this.#validatePlayerId(playerId);
+    async repairStory(gameId, playerId, storyIndex, replacements) {
+        this._validateGameId(gameId);
+        this._validatePlayerId(playerId);
+        this._validateStoryIndex(storyIndex);
 
-        const game = await this.#games.get(gameId);
-        if (game === undefined) throw new GameNotFound(gameId);
+        const game = await this._getGameOrThrow(gameId);
 
-        const activity = game.userActivity(playerId);
-        if (activity === undefined) throw new UserNotInGame(gameId, playerId);
-
-        if (!isSameActivity(activity, PlayerActivity.RepairingStory(storyIndex))) throw new InvalidPlayerActivity();
-
-        game.repairStory(playerId, storyIndex);
-        await this.#games.replace(game);
-    }
-
-    /**
-     *
-     * @param {any} gameId
-     */
-    #validateGameId(gameId) {
-        param("gameId", gameId).isRequired().mustBeString();
-    }
-
-    /**
-     *
-     * @param {any} playerId
-     */
-    #validatePlayerId(playerId) {
-        param("playerId", playerId).isRequired().mustBeString();
+        game.repairStory(playerId, storyIndex, replacements);
+        await this._games.replace(game);
     }
 };

@@ -58,12 +58,12 @@ describe("CreateGame", () => {
 
         test("user is added to game", async () => {
             const createdGame = (await games.get(gameCreated.gameId)) || fail();
-            expect(createdGame.hasUser(userId)).toStrictEqual(true);
+            expect(createdGame.hasPlayer(userId)).toStrictEqual(true);
         });
 
         test("user is waiting for the game to start", async () => {
             const createdGame = (await games.get(gameCreated.gameId)) || fail();
-            expect(createdGame.userActivity(userId)).toBe(PlayerActivity.AwaitingStart);
+            expect(createdGame.playerActivity(userId)).toBe(PlayerActivity.AwaitingStart);
         });
     });
 });

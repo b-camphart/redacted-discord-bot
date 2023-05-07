@@ -33,7 +33,7 @@ ParamValidation.prototype.isRequired = function () {
 exports.mustBeType = (expectedType, value, name) => {
     if (value === undefined) return;
     const actualType = typeof value;
-    if (actualType !== expectedType) throw new TypeError(`${name} must be a ${expectedType}.`);
+    if (actualType !== expectedType) throw new TypeError(`${name} must be a ${expectedType}.  Found: ${actualType}`);
 };
 
 /**
@@ -65,6 +65,17 @@ ParamValidation.prototype.mustBeArray = function () {
 };
 
 exports.ParamValidation = ParamValidation;
+
+/**
+ *
+ * @param {string} propertyName
+ * @returns {ParamValidation<unknown>}
+ */
+ParamValidation.prototype.mustHaveProperty = function (propertyName) {
+    if (this.value === undefined) return this;
+    if (!(propertyName in this.value)) throw new TypeError(`${this.name} must have property ${propertyName}.`);
+    return new ParamValidation(`${this.name}.${propertyName}`, this.value[propertyName]);
+};
 
 /**
  *

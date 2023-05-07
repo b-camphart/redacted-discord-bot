@@ -9,9 +9,9 @@ describe("FakeGameRepository", () => {
         const repo = new FakeGameRepository();
         const gameId = (await repo.add(makeGame())).id;
         const modifiedGame = (await repo.get(gameId)) || fail("failed to get game.");
-        modifiedGame.addUser("user-1");
+        modifiedGame.addPlayer("user-1");
 
         const storedGame = (await repo.get(gameId)) || fail("failed to get game.");
-        expect(storedGame.hasUser("user-1")).toBeFalsy();
+        expect(storedGame.hasPlayer("user-1")).toBeFalsy();
     });
 });

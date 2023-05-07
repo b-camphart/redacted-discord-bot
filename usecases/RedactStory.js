@@ -1,82 +1,57 @@
-const { GameNotFound } = require("../repositories/GameRepositoryExceptions");
 const { param } = require("../validation");
 const { exclusive, inclusive, mustBeInRange } = require("../validation/numbers");
 const { mustHaveLengthInRange, eachValueOf } = require("../validation/arrays");
+const { PlayerInGameUpdatesStoryUseCase } = require("./abstractUseCases/PlayerInGameUpdatesStoryUseCase");
 
-exports.RedactStory = class RedactStory {
-    #games;
+exports.RedactStory = class RedactStory extends PlayerInGameUpdatesStoryUseCase {
     /**
      *
      * @param {import("../repositories/GameRepository").UpdateGameRepository} gameRepository
      */
     constructor(gameRepository) {
-        this.#games = gameRepository;
+        super(gameRepository);
     }
 
     /**
      *
      * @param {string} gameId
-     * @param {string} userId
+     * @param {string} playerId
      * @param {number} storyIndex
      * @param {number[]} wordIndices
      */
-    async censorStory(gameId, userId, storyIndex, wordIndices) {
-        RedactStory.#validateCommonRedactInputs(gameId, userId, storyIndex);
+    async censorStory(gameId, playerId, storyIndex, wordIndices) {
+        this.#validateCommonRedactInputs(gameId, playerId, storyIndex);
         RedactStory.#validateWordIndices(wordIndices);
-        const game = await this.#getGame(gameId);
-        game.censorStory(userId, storyIndex, wordIndices);
-        this.#games.replace(game);
+        const game = await this._getGameOrThrow(gameId);
+        game.censorStory(playerId, storyIndex, wordIndices);
+        this._games.replace(game);
     }
 
     /**
      *
      * @param {string} gameId
-     * @param {string} userId
+     * @param {string} playerId
      * @param {number} storyIndex
      * @param {number} truncationCount
      */
-    async truncateStory(gameId, userId, storyIndex, truncationCount) {
-        RedactStory.#validateCommonRedactInputs(gameId, userId, storyIndex);
+    async truncateStory(gameId, playerId, storyIndex, truncationCount) {
+        this.#validateCommonRedactInputs(gameId, playerId, storyIndex);
         RedactStory.#validateTruncationCount(truncationCount);
-        const game = await this.#getGame(gameId);
-        game.truncateStory(userId, storyIndex, truncationCount);
-        this.#games.replace(game);
+        const game = await this._getGameOrThrow(gameId);
+        game.truncateStory(playerId, storyIndex, truncationCount);
+        this._games.replace(game);
     }
 
     /**
      *
      * @param {string} gameId
-     * @param {string} userId
+     * @param {string} playerId
      * @param {number} storyIndex
      */
-    static #validateCommonRedactInputs(gameId, userId, storyIndex) {
-        RedactStory.#validateGameId(gameId);
-        RedactStory.#validateUserId(userId);
-        RedactStory.#validateStoryIndex(storyIndex);
-    }
-
-    /**
-     *
-     * @param {any} gameId
-     */
-    static #validateGameId(gameId) {
-        param("gameId", gameId).isRequired().mustBeString();
-    }
-
-    /**
-     *
-     * @param {any} userId
-     */
-    static #validateUserId(userId) {
-        param("userId", userId).isRequired().mustBeString();
-    }
-
-    /**
-     *
-     * @param {any} storyIndex
-     */
-    static #validateStoryIndex(storyIndex) {
-        param("storyIndex", storyIndex).isRequired().mustBeNumber();
+    #validateCommonRedactInputs(gameId, playerId, storyIndex) {
+        this._validateGameId(gameId);
+        this._validatePlayerId(playerId);
+        this._validateStoryIndex(storyIndex);
     }
 
     /**
@@ -98,15 +73,5 @@ exports.RedactStory = class RedactStory {
     static #validateTruncationCount(truncationCount) {
         const numberParam = param("truncationCount", truncationCount).isRequired().mustBeNumber();
         mustBeInRange(numberParam, exclusive(0), exclusive(7));
-    }
-
-    /**
-     *
-     * @param {string} gameId
-     */
-    async #getGame(gameId) {
-        const game = await this.#games.get(gameId);
-        if (game === undefined) throw new GameNotFound(gameId);
-        return game;
     }
 };

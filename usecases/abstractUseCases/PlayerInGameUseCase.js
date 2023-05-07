@@ -1,0 +1,19 @@
+const { param } = require("../../validation");
+const { GameUseCase } = require("./GameUseCase");
+
+class PlayerInGameUseCase extends GameUseCase {
+    /** @param {import("../../repositories/GameRepository").ReadOnlyGameRepository} games */
+    constructor(games) {
+        super(games);
+    }
+
+    /**
+     *
+     * @param {any} playerId
+     */
+    _validatePlayerId(playerId) {
+        param("playerId", playerId).isRequired().mustBeString();
+    }
+}
+
+exports.PlayerInGameUseCase = PlayerInGameUseCase;

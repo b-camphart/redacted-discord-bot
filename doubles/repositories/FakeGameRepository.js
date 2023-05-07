@@ -2,6 +2,7 @@
 /** @typedef {import("../../repositories/GameRepository").GameWithId} GameWithId */
 
 const { Game } = require("../../entities/Game");
+const { param, mustBeType } = require("../../validation");
 
 /**
  * @implements {GameRepository}
@@ -23,7 +24,7 @@ exports.FakeGameRepository = class FakeGameRepository {
         if (storedGame === undefined) return undefined;
         const gameCopy = new Game(
             gameId,
-            storedGame.users(),
+            storedGame.playerIds(),
             storedGame.status(),
             storedGame.stories(),
             storedGame.maxStoryEntries

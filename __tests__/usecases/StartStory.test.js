@@ -1,11 +1,11 @@
 const { makeGame } = require("../../doubles/entities/makeGame");
 const { FakeGameRepository } = require("../../doubles/repositories/FakeGameRepository");
-const { InvalidPlayerActivity, UserNotInGame, Game } = require("../../entities/Game");
+const { Game } = require("../../entities/Game");
+const { InvalidPlayerActivity, UserNotInGame } = require("../../entities/Game.Exceptions");
 const { PlayerActivity } = require("../../entities/Game.PlayerActivity");
-const { StoryStatus } = require("../../entities/Game.StoryStatus");
+const { StoryStatus } = require("../../entities/Game.Story.Status");
 const { GameNotFound } = require("../../repositories/GameRepositoryExceptions");
 const { StartStory } = require("../../usecases/StartStory");
-const { AddPlayerToGame } = require("../../usecases/addPlayerToGame/AddPlayerToGame");
 const { OutOfRange } = require("../../validation/numbers");
 const { MustNotBeBlank } = require("../../validation/strings");
 const { contract, isRequired, mustBeString } = require("../contracts");
@@ -98,7 +98,7 @@ describe("Start Story", () => {
             /** @type {string} */
             let playerId;
             beforeEach(() => {
-                for (let i = 0; i < 4; i++) game.addUser(`player-${i + 1}`);
+                for (let i = 0; i < 4; i++) game.addPlayer(`player-${i + 1}`);
                 playerId = "player-2";
             });
             /**
@@ -133,12 +133,13 @@ describe("Start Story", () => {
 
                     test("the player is waiting for a story update", async () => {
                         const updatedGame = (await gameRepository.get(game.id)) || fail("Game was not saved");
-                        expect(updatedGame.userActivity(playerId)).toBe(PlayerActivity.AwaitingStory);
+                        expect(updatedGame.playerActivity(playerId)).toBe(PlayerActivity.AwaitingStory);
                     });
 
                     test("the story needs the next player to redact the story", async () => {
                         const updatedGame = (await gameRepository.get(game.id)) || fail("Game was not saved");
-                        expect(updatedGame.storyStatus(0)).toEqual(StoryStatus.Redact("player-3"));
+                        expect(updatedGame.storyActionRequired(0)).toEqual(StoryStatus.Redact.action);
+                        expect(updatedGame.playerAssignedToStory(0)).toEqual("player-3");
                     });
 
                     describe("when the previous player starts their story in the game", () => {
@@ -148,7 +149,9 @@ describe("Start Story", () => {
 
                         test("the player is redacting the other player's story", async () => {
                             const updatedGame = (await gameRepository.get(game.id)) || fail("Game was not saved");
-                            expect(updatedGame.userActivity("player-2")).toEqual(PlayerActivity.RedactingStory(1));
+                            expect(updatedGame.playerActivity("player-2")).toEqual(
+                                PlayerActivity.RedactingStory(1, "content 1")
+                            );
                         });
                     });
                 });
@@ -172,7 +175,9 @@ describe("Start Story", () => {
                     test("the player is redacting the other player's story", async () => {
                         await playerStartsStoryInGame("content 2");
                         const updatedGame = (await gameRepository.get(game.id)) || fail("Game was not saved");
-                        expect(updatedGame.userActivity("player-2")).toEqual(PlayerActivity.RedactingStory(0));
+                        expect(updatedGame.playerActivity("player-2")).toEqual(
+                            PlayerActivity.RedactingStory(0, "content 1")
+                        );
                     });
                 });
             });

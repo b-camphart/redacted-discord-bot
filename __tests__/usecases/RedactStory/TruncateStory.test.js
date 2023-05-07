@@ -1,15 +1,15 @@
-const { makeGame } = require("../../doubles/entities/makeGame");
-const { FakeGameRepository } = require("../../doubles/repositories/FakeGameRepository");
-const { Game, UserNotInGame, InvalidPlayerActivity } = require("../../entities/Game");
-const { PlayerActivity } = require("../../entities/Game.PlayerActivity");
-const { StoryStatus } = require("../../entities/Game.StoryStatus");
-const { User } = require("../../entities/User");
-const { GameNotFound } = require("../../repositories/GameRepositoryExceptions");
-const { RedactStory } = require("../../usecases/RedactStory");
-const { StartStory } = require("../../usecases/StartStory");
-const { IndexOutOfBounds, MustHaveLength } = require("../../usecases/validation");
-const { OutOfRange } = require("../../validation/numbers");
-const { contract, isRequired, mustBeString, mustBeNumber } = require("../contracts");
+const { makeGame } = require("../../../doubles/entities/makeGame");
+const { FakeGameRepository } = require("../../../doubles/repositories/FakeGameRepository");
+const { Game } = require("../../../entities/Game");
+const { UserNotInGame, InvalidPlayerActivity } = require("../../../entities/Game.Exceptions");
+const { PlayerActivity } = require("../../../entities/Game.PlayerActivity");
+const { StoryStatus } = require("../../../entities/Game.Story.Status");
+const { GameNotFound } = require("../../../repositories/GameRepositoryExceptions");
+const { RedactStory } = require("../../../usecases/RedactStory");
+const { StartStory } = require("../../../usecases/StartStory");
+const { IndexOutOfBounds } = require("../../../usecases/validation");
+const { OutOfRange } = require("../../../validation/numbers");
+const { contract, isRequired, mustBeString, mustBeNumber } = require("../../contracts");
 
 describe("Truncate a Story", () => {
     /** @type {FakeGameRepository} */
@@ -34,14 +34,14 @@ describe("Truncate a Story", () => {
                 return redactStory.truncateStory(gameId);
             });
         });
-        contract("userId", (name) => {
+        contract("playerId", (name) => {
             isRequired(name, () => {
                 // @ts-ignore
                 return redactStory.truncateStory("game-id");
             });
-            mustBeString(name, (userId) => {
+            mustBeString(name, (playerId) => {
                 // @ts-ignore
-                return redactStory.truncateStory("game-id", userId);
+                return redactStory.truncateStory("game-id", playerId);
             });
         });
         contract("storyIndex", (name) => {
@@ -100,7 +100,7 @@ describe("Truncate a Story", () => {
 
         describe("given the player is in the game", () => {
             beforeEach(() => {
-                game.addUser("user-id");
+                game.addPlayer("user-id");
             });
 
             test("the player's current activity in the game must be to redact a story", async () => {
@@ -110,9 +110,9 @@ describe("Truncate a Story", () => {
 
             describe("given the game has started", () => {
                 beforeEach(() => {
-                    game.addUser("player-1");
-                    game.addUser("player-2");
-                    game.addUser("player-3");
+                    game.addPlayer("player-1");
+                    game.addPlayer("player-2");
+                    game.addPlayer("player-3");
                     game.start();
                 });
 
@@ -121,7 +121,7 @@ describe("Truncate a Story", () => {
                     game.startStory("user-id", "content-0");
                     const action = redactStory.truncateStory(game.id, "user-id", 0, 5);
                     await expect(action).rejects.toThrow(IndexOutOfBounds);
-                    await expect(action).rejects.toThrow("truncationCount must be less than 5.");
+                    await expect(action).rejects.toThrow("truncationCount must be less than <5>.");
                 });
 
                 describe("given the player and previous player have started a story", () => {
@@ -138,13 +138,14 @@ describe("Truncate a Story", () => {
                     test("the player is awaiting a story", async () => {
                         await redactStory.truncateStory(game.id, "user-id", 0, 6);
                         const savedGame = (await games.get(game.id)) || fail("game was removed from repo");
-                        expect(savedGame.userActivity("user-id")).toEqual(PlayerActivity.AwaitingStory);
+                        expect(savedGame.playerActivity("user-id")).toEqual(PlayerActivity.AwaitingStory);
                     });
 
                     test("the story is awaiting repair by the next player", async () => {
                         await redactStory.truncateStory(game.id, "user-id", 0, 6);
                         const savedGame = (await games.get(game.id)) || fail("game was removed from repo");
-                        expect(savedGame.storyStatus(0)).toEqual(StoryStatus.RepairTruncation("player-1", 6));
+                        expect(savedGame.storyActionRequired(0)).toEqual(StoryStatus.RepairTruncation.action);
+                        expect(savedGame.playerAssignedToStory(0)).toEqual("player-1");
                     });
 
                     describe("given the previous player has already redacted a story", () => {
@@ -155,7 +156,7 @@ describe("Truncate a Story", () => {
                         test("the player is repairing a story", async () => {
                             await redactStory.truncateStory(game.id, "user-id", 0, 6);
                             const savedGame = (await games.get(game.id)) || fail("game was removed from repo");
-                            expect(savedGame.userActivity("user-id")).toEqual(PlayerActivity.RepairingStory(2));
+                            expect(savedGame.playerActivity("user-id")).toEqual(PlayerActivity.RepairingStory(2));
                         });
                     });
 
@@ -167,7 +168,7 @@ describe("Truncate a Story", () => {
                         });
                         test("the player is repairing a story", async () => {
                             const savedGame = (await games.get(game.id)) || fail("game was removed from repo");
-                            expect(savedGame.userActivity("user-id")).toEqual(PlayerActivity.RepairingStory(2));
+                            expect(savedGame.playerActivity("user-id")).toEqual(PlayerActivity.RepairingStory(2));
                         });
                     });
                 });

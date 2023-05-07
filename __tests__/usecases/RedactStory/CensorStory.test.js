@@ -1,15 +1,15 @@
-const { makeGame } = require("../../doubles/entities/makeGame");
-const { FakeGameRepository } = require("../../doubles/repositories/FakeGameRepository");
-const { Game, UserNotInGame, InvalidPlayerActivity } = require("../../entities/Game");
-const { PlayerActivity } = require("../../entities/Game.PlayerActivity");
-const { StoryStatus } = require("../../entities/Game.StoryStatus");
-const { User } = require("../../entities/User");
-const { GameNotFound } = require("../../repositories/GameRepositoryExceptions");
-const { RedactStory } = require("../../usecases/RedactStory");
-const { StartStory } = require("../../usecases/StartStory");
-const { IndexOutOfBounds, MustHaveLength } = require("../../usecases/validation");
-const { OutOfRange } = require("../../validation/numbers");
-const { isRequired, mustBeString, contract, mustBeNumber } = require("../contracts");
+const { makeGame } = require("../../../doubles/entities/makeGame");
+const { FakeGameRepository } = require("../../../doubles/repositories/FakeGameRepository");
+const { Game } = require("../../../entities/Game");
+const { UserNotInGame, InvalidPlayerActivity } = require("../../../entities/Game.Exceptions");
+const { PlayerActivity } = require("../../../entities/Game.PlayerActivity");
+const { StoryStatus } = require("../../../entities/Game.Story.Status");
+const { GameNotFound } = require("../../../repositories/GameRepositoryExceptions");
+const { RedactStory } = require("../../../usecases/RedactStory");
+const { StartStory } = require("../../../usecases/StartStory");
+const { IndexOutOfBounds } = require("../../../usecases/validation");
+const { OutOfRange } = require("../../../validation/numbers");
+const { isRequired, mustBeString, contract, mustBeNumber } = require("../../contracts");
 
 describe("Censor a Story", () => {
     /** @type {FakeGameRepository} */
@@ -34,14 +34,14 @@ describe("Censor a Story", () => {
                 return redactStory.censorStory(gameId);
             });
         });
-        contract("userId", (name) => {
+        contract("playerId", (name) => {
             isRequired(name, () => {
                 // @ts-ignore
                 return redactStory.censorStory("game-id");
             });
-            mustBeString(name, (userId) => {
+            mustBeString(name, (playerId) => {
                 // @ts-ignore
-                return redactStory.censorStory("game-id", userId);
+                return redactStory.censorStory("game-id", playerId);
             });
         });
         contract("storyIndex", (name) => {
@@ -107,7 +107,7 @@ describe("Censor a Story", () => {
 
         describe("given the player is in the game", () => {
             beforeEach(() => {
-                game.addUser("user-id");
+                game.addPlayer("user-id");
             });
 
             test("the player's current activity in the game must be to redact a story", async () => {
@@ -117,9 +117,9 @@ describe("Censor a Story", () => {
 
             describe("given the player and previous player have started a story", () => {
                 beforeEach(() => {
-                    game.addUser("player-1");
-                    game.addUser("player-2");
-                    game.addUser("player-3");
+                    game.addPlayer("player-1");
+                    game.addPlayer("player-2");
+                    game.addPlayer("player-3");
                     game.start();
                     game.startStory("player-3", "I have seven words in this content.");
                     game.startStory("user-id", "content-0");
@@ -143,36 +143,41 @@ describe("Censor a Story", () => {
                 test("the player is awaiting a story", async () => {
                     await redactStory.censorStory(game.id, "user-id", 0, [2, 4, 6]);
                     const savedGame = (await games.get(game.id)) || fail("game was removed from repo");
-                    expect(savedGame.userActivity("user-id")).toEqual(PlayerActivity.AwaitingStory);
+                    expect(savedGame.playerActivity("user-id")).toEqual(PlayerActivity.AwaitingStory);
                 });
 
                 test("the story is awaiting repair by the next player", async () => {
                     await redactStory.censorStory(game.id, "user-id", 0, [2, 4, 6]);
                     const savedGame = (await games.get(game.id)) || fail("game was removed from repo");
-                    expect(savedGame.storyStatus(0)).toEqual(StoryStatus.RepairCensor("player-1", [2, 4, 6]));
+                    expect(savedGame.storyActionRequired(0)).toEqual(StoryStatus.RepairCensor.action);
+                    expect(savedGame.playerAssignedToStory(0)).toEqual("player-1");
                 });
 
                 describe("given the previous player has already redacted a story", () => {
                     beforeEach(() => {
-                        game.startStory("player-2", "content-2");
+                        game.startStory("player-2", "content two");
                         game.censorStory("player-3", 2, [0]);
                     });
                     test("the player is repairing a story", async () => {
                         await redactStory.censorStory(game.id, "user-id", 0, [2, 4, 6]);
                         const savedGame = (await games.get(game.id)) || fail("game was removed from repo");
-                        expect(savedGame.userActivity("user-id")).toEqual(PlayerActivity.RepairingStory(2));
+                        expect(savedGame.playerActivity("user-id")).toEqual(
+                            PlayerActivity.RepairingCensoredStory(2, "_______ two", [[0, 7]])
+                        );
                     });
                 });
 
                 describe("once the previous player redacts a story", () => {
                     beforeEach(async () => {
                         await redactStory.censorStory(game.id, "user-id", 0, [2, 4, 6]);
-                        await new StartStory(games).startStory(game.id, "player-2", "content-2");
+                        await new StartStory(games).startStory(game.id, "player-2", "content two");
                         await redactStory.censorStory(game.id, "player-3", 2, [0]);
                     });
                     test("the player is repairing a story", async () => {
                         const savedGame = (await games.get(game.id)) || fail("game was removed from repo");
-                        expect(savedGame.userActivity("user-id")).toEqual(PlayerActivity.RepairingStory(2));
+                        expect(savedGame.playerActivity("user-id")).toEqual(
+                            PlayerActivity.RepairingCensoredStory(2, "_______ two", [[0, 7]])
+                        );
                     });
                 });
             });

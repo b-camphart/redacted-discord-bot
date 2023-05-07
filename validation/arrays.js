@@ -1,3 +1,4 @@
+const { MustHaveLength } = require("../usecases/validation");
 const { ParamValidation } = require("./index");
 const { mustBeInRange } = require("./numbers");
 /** @typedef {import("./numbers").RangeEnd} RangeEnd */
@@ -9,15 +10,14 @@ const { mustBeInRange } = require("./numbers");
  */
 exports.mustHaveLength = (validation, exactLength) => {
     if (validation.value === undefined) return validation;
-    if (validation.value.length !== exactLength)
-        throw new TypeError(`${validation.name} must have length ${exactLength}.`);
+    if (validation.value.length !== exactLength) throw new MustHaveLength(validation.name, exactLength);
     return validation;
 };
 
 /**
  * @param {ParamValidation<{ length: number }>} validation
  * @param {RangeEnd} start
- * @param {RangeEnd} end
+ * @param {RangeEnd} [end]
  * @returns {ParamValidation<{ length: number }>}
  */
 exports.mustHaveLengthInRange = (validation, start, end) => {

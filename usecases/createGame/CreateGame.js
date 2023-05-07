@@ -50,7 +50,7 @@ exports.CreateGame = class CreateGame {
      */
     static #createGameWithCreator(creator) {
         const game = new Game();
-        game.addUser(creator.id);
+        game.addPlayer(creator.id);
         return game;
     }
 

@@ -20,7 +20,7 @@ exports.OutOfRange = OutOfRange;
 /**
  * @param {ParamValidation<number>} validation
  * @param {RangeEnd} start
- * @param {RangeEnd} end
+ * @param {RangeEnd} [end]
  */
 exports.mustBeInRange = (validation, start, end) => {
     if (validation.value === undefined || typeof validation.value !== "number") return this;
@@ -30,10 +30,14 @@ exports.mustBeInRange = (validation, start, end) => {
         );
     if (!start.included && validation.value <= start.value)
         throw new OutOfRange(`${validation.name} <${validation.value}> must be greater than ${start.value}.`);
-    if (end.included && validation.value > end.value)
-        throw new OutOfRange(`${validation.name} <${validation.value}> must be less than or equal to ${end.value}.`);
-    if (!end.included && validation.value >= end.value)
-        throw new OutOfRange(`${validation.name} <${validation.value}> must be less than ${end.value}.`);
+    if (end !== undefined) {
+        if (end.included && validation.value > end.value)
+            throw new OutOfRange(
+                `${validation.name} <${validation.value}> must be less than or equal to ${end.value}.`
+            );
+        if (!end.included && validation.value >= end.value)
+            throw new OutOfRange(`${validation.name} <${validation.value}> must be less than ${end.value}.`);
+    }
     return validation;
 };
 
