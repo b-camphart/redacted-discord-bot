@@ -1,5 +1,5 @@
 const { Then } = require("@cucumber/cucumber");
-const { PlayerActivity } = require("../../entities/Game.PlayerActivity");
+const { PlayerActivity } = require("../../src/entities/Game.PlayerActivity");
 const assert = require("assert");
 
 Then("{string} should be waiting for the game to start", async function (username) {

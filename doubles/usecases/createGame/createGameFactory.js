@@ -1,6 +1,6 @@
 const { FakeGameRepository } = require("../../repositories/FakeGameRepository");
 const { FakeUserRepository } = require("../../repositories/FakeUserRepository");
-const { CreateGame } = require("../../../usecases/createGame/CreateGame");
+const { CreateGame } = require("../../../src/usecases/createGame/CreateGame");
 
 /**
  *

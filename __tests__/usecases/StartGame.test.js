@@ -1,11 +1,11 @@
 const { makeGame } = require("../../doubles/entities/makeGame");
 const { FakeGameRepository } = require("../../doubles/repositories/FakeGameRepository");
 const { PlayerNotifierSpy, DumbPlayerNotifier } = require("../../doubles/repositories/PlayerNotifierDoubles");
-const { UserNotInGame, GameAlreadyStarted } = require("../../entities/Game.Exceptions");
-const { PlayerActivity } = require("../../entities/Game.PlayerActivity");
-const { GameNotFound } = require("../../repositories/GameRepositoryExceptions");
-const { StartGame } = require("../../usecases/startGame/StartGame");
-const { NotEnoughPlayersToStartGame } = require("../../usecases/startGame/validation");
+const { UserNotInGame, GameAlreadyStarted } = require("../../src/entities/Game.Exceptions");
+const { PlayerActivity } = require("../../src/entities/Game.PlayerActivity");
+const { GameNotFound } = require("../../src/repositories/GameRepositoryExceptions");
+const { StartGame } = require("../../src/usecases/startGame/StartGame");
+const { NotEnoughPlayersToStartGame } = require("../../src/usecases/startGame/validation");
 const { contract, isRequired, mustBeString } = require("../contracts");
 
 describe("Start Game", () => {
@@ -121,7 +121,7 @@ describe("Start Game", () => {
 /**
  *
  * @param {any} gameRepository
- * @param {import("../../repositories/PlayerNotifier").PlayerNotifier} playerNotifier
+ * @param {import("../../src/repositories/PlayerNotifier").PlayerNotifier} playerNotifier
  * @returns {StartGame}
  */
 const makeStartGame = (gameRepository = new FakeGameRepository(), playerNotifier = new DumbPlayerNotifier()) => {

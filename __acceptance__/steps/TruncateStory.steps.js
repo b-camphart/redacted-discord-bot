@@ -1,9 +1,9 @@
 const { When, Given } = require("@cucumber/cucumber");
-const { range, inclusive, exclusive } = require("../../utils/range");
+const { range, inclusive, exclusive } = require("../../src/utils/range");
 
 Given("{string} has truncated his assigned story", async function (username) {
     const activity = await this.getPlayerActivity(username);
-    const numberOfCensors = range(inclusive(1), inclusive(Math.min(activity.wordBoundaries.length, 7))).random();
+    const numberOfCensors = range(inclusive(1), exclusive(Math.min(activity.wordBoundaries.length, 8))).random();
     await this.truncateStory(username, activity.storyIndex, numberOfCensors);
 });
 
@@ -14,7 +14,7 @@ Given("{string} has truncated {int} words", async function (username, truncation
 
 When("{string} truncates his assigned story", async function (username) {
     const activity = await this.getPlayerActivity(username);
-    const numberOfCensors = range(inclusive(1), inclusive(Math.min(activity.wordBoundaries.length, 7))).random();
+    const numberOfCensors = range(inclusive(1), exclusive(Math.min(activity.wordBoundaries.length, 8))).random();
     await this.truncateStory(username, activity.storyIndex, numberOfCensors);
 });
 

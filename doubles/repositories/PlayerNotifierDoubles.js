@@ -1,4 +1,4 @@
-/** @typedef {import("../../repositories/PlayerNotifier").PlayerNotifier} PlayerNotifier */
+/** @typedef {import("../../src/repositories/PlayerNotifier").PlayerNotifier} PlayerNotifier */
 
 /**
  * @implements {PlayerNotifier}
@@ -20,6 +20,9 @@ exports.DumbPlayerNotifier = class DumbPlayerNotifier {
  */
 exports.PlayerNotifierSpy = class PlayerNotifierSpy {
     constructor() {
+        /**
+         * @type {any[]}
+         */
         this.playersNotified = [];
     }
     /**

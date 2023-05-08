@@ -1,4 +1,4 @@
-const { GameNotFound } = require("../../repositories/GameRepositoryExceptions");
+const { GameNotFound } = require("../../src/repositories/GameRepositoryExceptions");
 
 /**
  *

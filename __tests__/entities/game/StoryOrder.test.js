@@ -1,6 +1,6 @@
 const { makeGame } = require("../../../doubles/entities/makeGame");
-const { Game } = require("../../../entities/Game");
-const { PlayerActivity } = require("../../../entities/Game.PlayerActivity");
+const { Game } = require("../../../src/entities/Game");
+const { PlayerActivity } = require("../../../src/entities/Game.PlayerActivity");
 
 describe("Story Order", () => {
     const players = ["player-1", "player-2", "player-3", "player-4"];

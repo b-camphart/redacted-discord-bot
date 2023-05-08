@@ -1,8 +1,7 @@
 /** @typedef {import("../../repositories/GameRepository").GameRepository} GameRepository */
 /** @typedef {import("../../repositories/GameRepository").GameWithId} GameWithId */
 
-const { Game } = require("../../entities/Game");
-const { param, mustBeType } = require("../../validation");
+const { Game } = require("../../src/entities/Game");
 
 /**
  * @implements {GameRepository}

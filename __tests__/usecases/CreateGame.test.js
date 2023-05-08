@@ -1,10 +1,10 @@
-const { UserNotFound } = require("../../repositories/UserRepositoryExceptions");
+const { UserNotFound } = require("../../src/repositories/UserRepositoryExceptions");
 const { FakeUserRepository } = require("../../doubles/repositories/FakeUserRepository");
 const { makeCreateGame } = require("../../doubles/usecases/createGame/createGameFactory");
-const { User } = require("../../entities/User");
+const { User } = require("../../src/entities/User");
 const { FakeGameRepository } = require("../../doubles/repositories/FakeGameRepository");
-const { PlayerActivity } = require("../../entities/Game.PlayerActivity");
-const { GameCreated } = require("../../usecases/createGame/GameCreated");
+const { PlayerActivity } = require("../../src/entities/Game.PlayerActivity");
+const { GameCreated } = require("../../src/usecases/createGame/GameCreated");
 const { isRequired, mustBeString, contract } = require("../contracts");
 
 describe("CreateGame", () => {

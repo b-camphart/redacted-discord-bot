@@ -1,10 +1,5 @@
-const { PlayerActivityService } = require("../usecases/PlayerActivityService");
-const { RedactStory } = require("../usecases/RedactStory");
-const { RepairStory } = require("../usecases/RepairStory");
-const { StartStory } = require("../usecases/StartStory");
-const { CreateGame } = require("../usecases/createGame/CreateGame");
-const { JoinGame } = require("../usecases/joinGame/JoinGame");
-const { StartGame } = require("../usecases/startGame/StartGame");
+const { PlayerActivityService } = require("../../src/usecases/PlayerActivityService");
+const UseCases = require("../../src/usecases");
 
 class Redacted {
     #users;
@@ -13,9 +8,9 @@ class Redacted {
 
     /**
      *
-     * @param {import("../repositories/UserRepository").ReadOnlyUserRepository} userRepository
-     * @param {import("../repositories/GameRepository").GameRepository} gameRepository
-     * @param {import("../repositories/PlayerNotifier").PlayerNotifier} playerNotifier
+     * @param {import("../../src/repositories/UserRepository").ReadOnlyUserRepository} userRepository
+     * @param {import("../../src/repositories/GameRepository").GameRepository} gameRepository
+     * @param {import("../../src/repositories/PlayerNotifier").PlayerNotifier} playerNotifier
      */
     constructor(userRepository, gameRepository, playerNotifier) {
         this.#users = userRepository;
@@ -29,7 +24,7 @@ class Redacted {
      * @returns
      */
     async createGame(userId) {
-        return await new CreateGame(this.#users, this.#games).create(userId);
+        return await new UseCases.CreateGame(this.#users, this.#games).create(userId);
     }
 
     /**
@@ -48,7 +43,7 @@ class Redacted {
      * @returns
      */
     async joinGame(gameId, playerId) {
-        return await new JoinGame(this.#games, this.#users, this.#playerNotifier).addPlayer(gameId, playerId);
+        return await new UseCases.JoinGame(this.#games, this.#users, this.#playerNotifier).addPlayer(gameId, playerId);
     }
 
     /**
@@ -58,7 +53,7 @@ class Redacted {
      * @returns
      */
     async startGame(gameId, playerId) {
-        return await new StartGame(this.#games, this.#playerNotifier).startGame(gameId, playerId);
+        return await new UseCases.StartGame(this.#games, this.#playerNotifier).startGame(gameId, playerId);
     }
 
     /**
@@ -69,7 +64,7 @@ class Redacted {
      * @returns
      */
     async startStory(gameId, playerId, content) {
-        return await new StartStory(this.#games).startStory(gameId, playerId, content);
+        return await new UseCases.StartStory(this.#games).startStory(gameId, playerId, content);
     }
 
     /**
@@ -81,7 +76,7 @@ class Redacted {
      * @returns
      */
     async censorStory(gameId, playerId, storyIndex, wordIndices) {
-        return await new RedactStory(this.#games).censorStory(gameId, playerId, storyIndex, wordIndices);
+        return await new UseCases.RedactStory(this.#games).censorStory(gameId, playerId, storyIndex, wordIndices);
     }
 
     /**
@@ -93,7 +88,7 @@ class Redacted {
      * @returns
      */
     async truncateStory(gameId, playerId, storyIndex, truncateCount) {
-        return await new RedactStory(this.#games).truncateStory(gameId, playerId, storyIndex, truncateCount);
+        return await new UseCases.RedactStory(this.#games).truncateStory(gameId, playerId, storyIndex, truncateCount);
     }
 
     /**
@@ -105,7 +100,7 @@ class Redacted {
      * @returns
      */
     async repairStory(gameId, playerId, storyIndex, replacements) {
-        return await new RepairStory(this.#games).repairStory(gameId, playerId, storyIndex, replacements);
+        return await new UseCases.RepairStory(this.#games).repairStory(gameId, playerId, storyIndex, replacements);
     }
 }
 

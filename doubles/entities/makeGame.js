@@ -1,5 +1,5 @@
-const { Game, UserInGame } = require("../../entities/Game");
-const { PlayerActivity } = require("../../entities/Game.PlayerActivity");
+const { Game, UserInGame } = require("../../src/entities/Game");
+const { PlayerActivity } = require("../../src/entities/Game.PlayerActivity");
 
 /**
  *

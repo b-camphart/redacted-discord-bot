@@ -1,9 +1,9 @@
 const { makeGame } = require("../../../doubles/entities/makeGame");
 const { FakeGameRepository } = require("../../../doubles/repositories/FakeGameRepository");
-const { PlayerActivity } = require("../../../entities/Game.PlayerActivity");
-const { PlayerActivityService } = require("../../../usecases/PlayerActivityService");
+const { PlayerActivity } = require("../../../src/entities/Game.PlayerActivity");
+const { PlayerActivityService } = require("../../../src/usecases/PlayerActivityService");
 const { expectActionToThrowGameNotFound, expectActionToThrowUserNotInGame } = require("../expectErrors");
-const { repeat } = require("../../../utils/iteration");
+const { repeat } = require("../../../src/utils/iteration");
 const { getOrThrow } = require("../../../doubles/repositories/extensions");
 const { contract, isRequired, mustBeString } = require("../../contracts");
 

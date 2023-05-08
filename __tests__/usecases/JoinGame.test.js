@@ -2,14 +2,14 @@ const { FakeGameRepository } = require("../../doubles/repositories/FakeGameRepos
 const { FakeUserRepository } = require("../../doubles/repositories/FakeUserRepository");
 const { PlayerNotifierSpy } = require("../../doubles/repositories/PlayerNotifierDoubles");
 const { makeAddPlayerToGame } = require("../../doubles/usecases/addPlayerToGame/addPlayerToGameFactory");
-const { Game } = require("../../entities/Game");
-const { GameAlreadyStarted } = require("../../entities/Game.Exceptions");
-const { User } = require("../../entities/User");
-const { GameNotFound } = require("../../repositories/GameRepositoryExceptions");
-const { UserNotFound } = require("../../repositories/UserRepositoryExceptions");
-const { JoinGame } = require("../../usecases/joinGame/JoinGame");
-const { PlayerJoinedGame } = require("../../usecases/joinGame/PlayerJoinedGame");
-const { UserAlreadyInGame } = require("../../usecases/joinGame/UserAlreadyInGame");
+const { Game } = require("../../src/entities/Game");
+const { GameAlreadyStarted } = require("../../src/entities/Game.Exceptions");
+const { User } = require("../../src/entities/User");
+const { GameNotFound } = require("../../src/repositories/GameRepositoryExceptions");
+const { UserNotFound } = require("../../src/repositories/UserRepositoryExceptions");
+const { JoinGame } = require("../../src/usecases/joinGame/JoinGame");
+const { PlayerJoinedGame } = require("../../src/usecases/joinGame/PlayerJoinedGame");
+const { UserAlreadyInGame } = require("../../src/usecases/joinGame/UserAlreadyInGame");
 
 describe("AddPlayerToGame", () => {
     /** @type {JoinGame} */

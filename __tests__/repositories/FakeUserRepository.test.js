@@ -1,5 +1,5 @@
 const { FakeUserRepository } = require("../../doubles/repositories/FakeUserRepository");
-const { User } = require("../../entities/User");
+const { User } = require("../../src/entities/User");
 
 describe("FakeUserRepository", () => {
     /** @type {FakeUserRepository} */

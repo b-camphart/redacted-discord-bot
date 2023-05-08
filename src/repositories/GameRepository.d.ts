@@ -1,4 +1,4 @@
-import { Game } from "../entities/Game";
+import { Game } from "../src/entities/Game";
 
 export type GameWithId = Game & { id: String };
 

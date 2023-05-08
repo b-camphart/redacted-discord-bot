@@ -1,7 +1,7 @@
 /** @typedef {import("../../repositories/UserRepository").ReadOnlyUserRepository} ReadOnlyUserRepository */
 /** @typedef {import("../../repositories/UserRepository").UserWithId} UserWithId */
 
-const { User } = require("../../entities/User");
+const { User } = require("../../src/entities/User");
 
 /**
  * @implements {ReadOnlyUserRepository}

@@ -1,11 +1,11 @@
 const { World } = require("@cucumber/cucumber");
-const { Redacted } = require("../../application/Redacted");
+const { Redacted } = require("../../src/application/Redacted");
 const { AllUsersExistRepository } = require("../../doubles/repositories/FakeUserRepository");
 const { FakeGameRepository } = require("../../doubles/repositories/FakeGameRepository");
 const { DumbPlayerNotifier } = require("../../doubles/repositories/PlayerNotifierDoubles");
-const { UserAlreadyInGame } = require("../../usecases/joinGame/UserAlreadyInGame");
-const { NotEnoughPlayersToStartGame } = require("../../usecases/startGame/validation");
-const { GameAlreadyStarted } = require("../../entities/Game.Exceptions");
+const { UserAlreadyInGame } = require("../../src/usecases/joinGame/UserAlreadyInGame");
+const { NotEnoughPlayersToStartGame } = require("../../src/usecases/startGame/validation");
+const { GameAlreadyStarted } = require("../../src/entities/Game.Exceptions");
 
 class TestContext extends World {
     /** @type {Redacted} */

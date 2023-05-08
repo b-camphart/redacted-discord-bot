@@ -1,4 +1,4 @@
-const { range, inclusive, exclusive } = require("../../utils/range");
+const { range, inclusive, exclusive } = require("../../src/utils/range");
 
 describe("random", () => {
     it.each([

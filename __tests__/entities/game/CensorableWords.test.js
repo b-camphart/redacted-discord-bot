@@ -2,7 +2,7 @@
 // want to know the bounds of each word, by index
 // return value should look something like: [[number, number]]
 
-const { censorableWords } = require("../../../entities/Words");
+const { censorableWords } = require("../../../src/entities/Words");
 
 test("no censorable words", () => {
     expect(censorableWords("")).toEqual([]);

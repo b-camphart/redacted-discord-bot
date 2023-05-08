@@ -2,7 +2,7 @@ const { IndexOutOfBounds } = require("../usecases/validation");
 const { repeat } = require("../utils/iteration");
 const { param } = require("../validation");
 const { eachValueOf, mustHaveLength } = require("../validation/arrays");
-const { mustBeInRange, exclusive, mustBeLessThan } = require("../validation/numbers");
+const { mustBeLessThan } = require("../validation/numbers");
 const { censorableWords } = require("./Words");
 
 /**

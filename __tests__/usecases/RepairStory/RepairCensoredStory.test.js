@@ -1,12 +1,12 @@
 const { makeGame } = require("../../../doubles/entities/makeGame");
 const { FakeGameRepository } = require("../../../doubles/repositories/FakeGameRepository");
-const { Game } = require("../../../entities/Game");
-const { UserNotInGame, InvalidPlayerActivity } = require("../../../entities/Game.Exceptions");
-const { PlayerActivity } = require("../../../entities/Game.PlayerActivity");
-const { StoryStatus } = require("../../../entities/Game.Story.Status");
-const { GameNotFound } = require("../../../repositories/GameRepositoryExceptions");
-const { RepairStory } = require("../../../usecases/RepairStory");
-const { MustHaveLength } = require("../../../usecases/validation");
+const { Game } = require("../../../src/entities/Game");
+const { UserNotInGame, InvalidPlayerActivity } = require("../../../src/entities/Game.Exceptions");
+const { PlayerActivity } = require("../../../src/entities/Game.PlayerActivity");
+const { StoryStatus } = require("../../../src/entities/Game.Story.Status");
+const { GameNotFound } = require("../../../src/repositories/GameRepositoryExceptions");
+const { RepairStory } = require("../../../src/usecases/RepairStory");
+const { MustHaveLength } = require("../../../src/usecases/validation");
 const { contract, isRequired, mustBeString, mustBeNumber, mustBeArray } = require("../../contracts");
 
 /** @type {FakeGameRepository} */

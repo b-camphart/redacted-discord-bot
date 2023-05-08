@@ -1,13 +1,13 @@
 const { makeGame } = require("../../doubles/entities/makeGame");
 const { FakeGameRepository } = require("../../doubles/repositories/FakeGameRepository");
-const { Game } = require("../../entities/Game");
-const { InvalidPlayerActivity, UserNotInGame } = require("../../entities/Game.Exceptions");
-const { PlayerActivity } = require("../../entities/Game.PlayerActivity");
-const { StoryStatus } = require("../../entities/Game.Story.Status");
-const { GameNotFound } = require("../../repositories/GameRepositoryExceptions");
-const { StartStory } = require("../../usecases/StartStory");
-const { OutOfRange } = require("../../validation/numbers");
-const { MustNotBeBlank } = require("../../validation/strings");
+const { Game } = require("../../src/entities/Game");
+const { InvalidPlayerActivity, UserNotInGame } = require("../../src/entities/Game.Exceptions");
+const { PlayerActivity } = require("../../src/entities/Game.PlayerActivity");
+const { StoryStatus } = require("../../src/entities/Game.Story.Status");
+const { GameNotFound } = require("../../src/repositories/GameRepositoryExceptions");
+const { StartStory } = require("../../src/usecases/StartStory");
+const { OutOfRange } = require("../../src/validation/numbers");
+const { MustNotBeBlank } = require("../../src/validation/strings");
 const { contract, isRequired, mustBeString } = require("../contracts");
 
 describe("Start Story", () => {

@@ -1,4 +1,4 @@
-const JoinGameNamespace = require("../../../usecases/joinGame/JoinGame");
+const JoinGameNamespace = require("../../../src/usecases/joinGame/JoinGame");
 
 /**
  *

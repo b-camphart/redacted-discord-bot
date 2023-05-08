@@ -1,5 +1,5 @@
 const { Given, When, DataTable } = require("@cucumber/cucumber");
-const { repeat, repeatAsync } = require("../../utils/iteration");
+const { repeat, repeatAsync } = require("../../src/utils/iteration");
 
 Given("{string} has joined the game", async function (username) {
     await this.joinGame(username);

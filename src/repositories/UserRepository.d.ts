@@ -1,4 +1,4 @@
-import { User } from "../entities/User";
+import { User } from "../src/entities/User";
 
 export type UserWithId = User & { id: string };
 

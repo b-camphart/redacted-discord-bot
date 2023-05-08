@@ -12,11 +12,11 @@
         "__acceptance__/**/*.js",
         "__tests__/**/*.js",
         "doubles/**/*.js",
-        "entities/**/*.js",
-        "repositories/**/*.js",
-        "usecases/**/*.js",
-        "utils/**/*.js",
-        "validation/**/*.js",
+        "src/entities/**/*.js",
+        "src/repositories/**/*.js",
+        "src/usecases/**/*.js",
+        "src/utils/**/*.js",
+        "src/validation/**/*.js",
         "server.js"
     ],
     "exclude": ["node_modules"]

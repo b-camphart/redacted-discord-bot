@@ -1,5 +1,5 @@
-const { UserNotInGame } = require("../../entities/Game");
-const { GameNotFound } = require("../../repositories/GameRepositoryExceptions");
+const { UserNotInGame } = require("../../src/entities/Game.Exceptions");
+const { GameNotFound } = require("../../src/repositories/GameRepositoryExceptions");
 
 /**
  * @template T

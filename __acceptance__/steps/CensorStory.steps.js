@@ -1,6 +1,6 @@
 const { When, Given } = require("@cucumber/cucumber");
-const { range, inclusive, exclusive } = require("../../utils/range");
-const { repeat } = require("../../utils/iteration");
+const { range, inclusive, exclusive } = require("../../src/utils/range");
+const { repeat } = require("../../src/utils/iteration");
 
 Given("{string} has censored his assigned story", async function (username) {
     const activity = await this.getPlayerActivity(username);

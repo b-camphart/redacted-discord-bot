@@ -1,6 +1,6 @@
 const { When, Given } = require("@cucumber/cucumber");
 const assert = require("assert");
-const { PlayerActivity } = require("../../entities/Game.PlayerActivity");
+const { PlayerActivity } = require("../../src/entities/Game.PlayerActivity");
 
 Given("{string} has filled in the censored words for his assigned story", async function (username) {
     const activity = await this.getPlayerActivity(username);

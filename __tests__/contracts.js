@@ -1,4 +1,4 @@
-const { param } = require("../validation");
+const { param } = require("../src/validation");
 
 /**
  *

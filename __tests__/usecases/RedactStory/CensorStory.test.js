@@ -1,14 +1,14 @@
 const { makeGame } = require("../../../doubles/entities/makeGame");
 const { FakeGameRepository } = require("../../../doubles/repositories/FakeGameRepository");
-const { Game } = require("../../../entities/Game");
-const { UserNotInGame, InvalidPlayerActivity } = require("../../../entities/Game.Exceptions");
-const { PlayerActivity } = require("../../../entities/Game.PlayerActivity");
-const { StoryStatus } = require("../../../entities/Game.Story.Status");
-const { GameNotFound } = require("../../../repositories/GameRepositoryExceptions");
-const { RedactStory } = require("../../../usecases/RedactStory");
-const { StartStory } = require("../../../usecases/StartStory");
-const { IndexOutOfBounds } = require("../../../usecases/validation");
-const { OutOfRange } = require("../../../validation/numbers");
+const { Game } = require("../../../src/entities/Game");
+const { UserNotInGame, InvalidPlayerActivity } = require("../../../src/entities/Game.Exceptions");
+const { PlayerActivity } = require("../../../src/entities/Game.PlayerActivity");
+const { StoryStatus } = require("../../../src/entities/Game.Story.Status");
+const { GameNotFound } = require("../../../src/repositories/GameRepositoryExceptions");
+const { RedactStory } = require("../../../src/usecases/RedactStory");
+const { StartStory } = require("../../../src/usecases/StartStory");
+const { IndexOutOfBounds } = require("../../../src/usecases/validation");
+const { OutOfRange } = require("../../../src/validation/numbers");
 const { isRequired, mustBeString, contract, mustBeNumber } = require("../../contracts");
 
 describe("Censor a Story", () => {

@@ -41,7 +41,7 @@ class StartGame extends PlayerInGameUpdatesGameUseCase {
      * @param {GameWithId} game
      */
     async #notifyPlayers(game) {
-        const emissions = game.playerIds().map((userId) => {
+        const emissions = game.playerIds().map((/** @type {string} */ userId) => {
             const activity = game.playerActivity(userId);
             if (activity === undefined) throw "Activity for user in game is undefined.";
             this.#playerNotifier.notifyPlayer(userId, new PlayerActivityChanged(game.id, userId, activity));
