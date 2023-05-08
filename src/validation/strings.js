@@ -1,4 +1,8 @@
-const { ParamValidation } = require("./index");
+/**
+ * @template T
+ *  @typedef {import("./index").ParamValidation<T>} ParamValidation<T>
+ */
+
 /**
  *
  * @param {string} content

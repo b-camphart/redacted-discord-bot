@@ -13,7 +13,7 @@ class PlayerInGameUpdatesGameUseCase extends PlayerInGameUseCase {
 
     /**
      *
-     * @param {import("../../repositories/GameRepository").GameWithId} game
+     * @param {import("../../entities/types").Game<string>} game
      */
     async _saveUpdate(game) {
         await this.#games.replace(game);

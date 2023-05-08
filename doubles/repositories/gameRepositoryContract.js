@@ -1,6 +1,6 @@
 const { makeGame } = require("../entities/makeGame");
-/** @typedef {import("../../repositories/GameRepository").GameRepository} GameRepository */
-/** @typedef {import("../../repositories/GameRepository").GameWithId} GameWithId */
+/** @typedef {import("../../src/repositories/GameRepository").GameRepository} GameRepository */
+/** @typedef {import("../../src/entities/types").GameWithId} GameWithId */
 
 /**
  * @param {() => GameRepository} gameRepo

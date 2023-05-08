@@ -64,7 +64,7 @@ describe("Start Game", () => {
         describe("given the player is in the game", () => {
             const addNewPlayerToGame = async () => {
                 const game = (await gameRepository.get(gameId)) || fail(new GameNotFound(gameId));
-                const playerId = `player-${game.playerIds().length + 1}`;
+                const playerId = `player-${game.playerIds.length + 1}`;
                 game.addPlayer(playerId);
                 await gameRepository.replace(game);
                 return playerId;
@@ -99,7 +99,7 @@ describe("Start Game", () => {
                 test("each player is starting a story", async () => {
                     await startGame.startGame(gameId, playerId);
                     const updatedGame = (await gameRepository.get(gameId)) || fail(new GameNotFound(gameId));
-                    updatedGame.playerIds().forEach((userIdInGame) => {
+                    updatedGame.playerIds.forEach((userIdInGame) => {
                         expect(updatedGame.playerActivity(userIdInGame)).toBe(PlayerActivity.StartingStory);
                     });
                 });

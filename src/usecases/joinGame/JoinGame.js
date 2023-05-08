@@ -1,12 +1,11 @@
-const { Game } = require("../../entities/Game");
 const { User } = require("../../entities/User");
 const { UserNotFound } = require("../../repositories/UserRepositoryExceptions");
 const { UpdateGameUseCase } = require("../abstractUseCases/UpdateGameUseCase");
 const { PlayerJoinedGame } = require("./PlayerJoinedGame");
 const { UserAlreadyInGame } = require("./UserAlreadyInGame");
-
 /**
- * @typedef {Game & { id: string }} GameWithId
+ * @template {string | undefined} T
+ * @typedef {import("../../entities/types").Game<T>} Game<T>
  */
 
 /**
@@ -43,7 +42,7 @@ exports.JoinGame = class JoinGame extends UpdateGameUseCase {
      *
      * @param {string} gameId
      * @param {string} userId
-     * @returns {Promise<Game>}
+     * @returns {Promise<Game<*>>}
      * @throws {GameNotFound} if the game does not exist
      * @throws {UserNotFound} if the user does not exist
      * @throws {UserAlreadyInGame} if the user is already in the game
@@ -53,7 +52,7 @@ exports.JoinGame = class JoinGame extends UpdateGameUseCase {
         this.#assertUserNotInGame(game, userId);
         const user = await this.#getUser(userId);
 
-        const preExistingPlayers = game.playerIds();
+        const preExistingPlayers = game.playerIds;
 
         game.addPlayer(user.id);
         this._games.replace(game);
@@ -65,7 +64,7 @@ exports.JoinGame = class JoinGame extends UpdateGameUseCase {
 
     /**
      *
-     * @param {GameWithId} game
+     * @param {Game<string>} game
      * @param {string} userId
      */
     #assertUserNotInGame(game, userId) {
@@ -76,7 +75,7 @@ exports.JoinGame = class JoinGame extends UpdateGameUseCase {
      *
      * @param {string} gameId
      * @param {string} userId
-     * @param {string[]} preExistingPlayers
+     * @param {readonly string[]} preExistingPlayers
      */
     async #notifyExistingPlayers(gameId, userId, preExistingPlayers) {
         const notification = new PlayerJoinedGame(gameId, userId);

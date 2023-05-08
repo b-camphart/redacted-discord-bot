@@ -2,7 +2,7 @@ const JoinGameNamespace = require("../../../src/usecases/joinGame/JoinGame");
 
 /**
  *
- * @param {import("../../../repositories/GameRepository").UpdateGameRepository} gameRepository
+ * @param {import("../../../src/repositories/GameRepository").UpdateGameRepository} gameRepository
  * @param {JoinGameNamespace.UserRepository} userRepository
  * @param {JoinGameNamespace.PlayerNotifier} playerNotifier
  * @returns {JoinGameNamespace.JoinGame}

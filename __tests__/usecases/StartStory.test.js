@@ -1,6 +1,5 @@
 const { makeGame } = require("../../doubles/entities/makeGame");
 const { FakeGameRepository } = require("../../doubles/repositories/FakeGameRepository");
-const { Game } = require("../../src/entities/Game");
 const { InvalidPlayerActivity, UserNotInGame } = require("../../src/entities/Game.Exceptions");
 const { PlayerActivity } = require("../../src/entities/Game.PlayerActivity");
 const { StoryStatus } = require("../../src/entities/Game.Story.Status");
@@ -73,13 +72,12 @@ describe("Start Story", () => {
     });
 
     describe("given the game exists", () => {
-        /** @type {import("../../repositories/GameRepository").GameWithId} */
+        /** @type {import("../../src/entities/types").GameWithId} */
         let game;
         /**
          *
          * @param {string} playerId
          * @param {string} content
-         * @returns {Promise<Game>}
          */
         const startStoryInGame = async (playerId, content) => {
             return await startStory.startStory(game.id, playerId, content);
@@ -104,7 +102,6 @@ describe("Start Story", () => {
             /**
              *
              * @param {string} content
-             * @returns {Promise<Game>}
              */
             const playerStartsStoryInGame = async (content) => {
                 return await startStoryInGame(playerId, content);
@@ -138,7 +135,7 @@ describe("Start Story", () => {
 
                     test("the story needs the next player to redact the story", async () => {
                         const updatedGame = (await gameRepository.get(game.id)) || fail("Game was not saved");
-                        expect(updatedGame.storyActionRequired(0)).toEqual(StoryStatus.Redact.action);
+                        expect(updatedGame.actionRequiredInStory(0)).toEqual(StoryStatus.Redact.action);
                         expect(updatedGame.playerAssignedToStory(0)).toEqual("player-3");
                     });
 
@@ -187,7 +184,7 @@ describe("Start Story", () => {
 
 /**
  *
- * @param {import("../../repositories/GameRepository").UpdateGameRepository} gameRepository
+ * @param {import("../../src/repositories/GameRepository").UpdateGameRepository} gameRepository
  * @returns {StartStory}
  */
 const makeStartStory = (gameRepository = new FakeGameRepository()) => {

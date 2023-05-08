@@ -2,7 +2,7 @@ const { GameNotFound } = require("../../src/repositories/GameRepositoryException
 
 /**
  *
- * @param {import("../../repositories/GameRepository").ReadOnlyGameRepository} gameRepo
+ * @param {import("../../src/repositories/GameRepository").ReadOnlyGameRepository} gameRepo
  * @param {string} gameId
  */
 exports.getOrThrow = async (gameRepo, gameId) => {

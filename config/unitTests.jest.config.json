@@ -1,5 +1,4 @@
 {
     "testMatch": ["**/*.test.js"],
-    "rootDir": "../__tests__/",
-    "verbose": true
+    "rootDir": "../__tests__/"
 }

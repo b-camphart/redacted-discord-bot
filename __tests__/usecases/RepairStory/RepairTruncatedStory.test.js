@@ -1,6 +1,5 @@
 const { makeGame } = require("../../../doubles/entities/makeGame");
 const { FakeGameRepository } = require("../../../doubles/repositories/FakeGameRepository");
-const { Game } = require("../../../src/entities/Game");
 const { UserNotInGame, InvalidPlayerActivity } = require("../../../src/entities/Game.Exceptions");
 const { PlayerActivity } = require("../../../src/entities/Game.PlayerActivity");
 const { StoryStatus } = require("../../../src/entities/Game.Story.Status");
@@ -58,7 +57,7 @@ describe("Repair a Truncated Story", () => {
     });
 
     describe("given the game exists", () => {
-        /** @type {Game & {id: string}} */
+        /** @type {import("../../../src/entities/types").Game<string>} */
         let game;
         beforeEach(async () => {
             game = await games.add(makeGame());
@@ -137,7 +136,7 @@ describe("Repair a Truncated Story", () => {
                         test("the story is awaiting a continuation from the next player", async () => {
                             await repairStory.repairStory(game.id, "user-id", 1, "replaced");
                             const savedGame = (await games.get(game.id)) || fail("failed to get game.");
-                            expect(savedGame.storyActionRequired(1)).toEqual(StoryStatus.Continue.action);
+                            expect(savedGame.actionRequiredInStory(1)).toEqual(StoryStatus.Continue.action);
                             expect(savedGame.playerAssignedToStory(1)).toEqual("player-2");
 
                             //("player-2", "content replaced")
@@ -154,19 +153,26 @@ describe("Repair a Truncated Story", () => {
                                 expect(savedGame.playerActivity("user-id")).toEqual(PlayerActivity.AwaitingStory);
                             });
                         });
-
-                        describe("given the story has reached its maximum number of entries", () => {
-                            beforeEach(() => {
-                                game.maxStoryEntries = 1;
-                            });
-
-                            test("the story is completed", async () => {
-                                await repairStory.repairStory(game.id, "user-id", 1, "replaced");
-                                const savedGame = (await games.get(game.id)) || fail("failed to get game.");
-                                expect(savedGame.storyActionRequired(1)).toEqual(StoryStatus.Completed.action);
-                            });
-                        });
                     });
+                });
+            });
+
+            describe("given the game has been started with only 1 entry per story", () => {
+                beforeEach(() => {
+                    game.addPlayer("player-2");
+                    game.addPlayer("player-3");
+                    game.addPlayer("player-4");
+                    game.start(1);
+                    game.startStory("user-id", "content one");
+                    game.startStory("player-3", "content two");
+                    game.startStory("player-4", "content four");
+                    game.truncateStory("player-4", 1, 1);
+                });
+
+                test("the story is completed", async () => {
+                    await repairStory.repairStory(game.id, "user-id", 1, "replaced");
+                    const savedGame = (await games.get(game.id)) || fail("failed to get game.");
+                    expect(savedGame.actionRequiredInStory(1)).toEqual(StoryStatus.Completed.action);
                 });
             });
         });

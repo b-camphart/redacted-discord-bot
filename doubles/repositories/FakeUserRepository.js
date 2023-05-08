@@ -1,5 +1,5 @@
-/** @typedef {import("../../repositories/UserRepository").ReadOnlyUserRepository} ReadOnlyUserRepository */
-/** @typedef {import("../../repositories/UserRepository").UserWithId} UserWithId */
+/** @typedef {import("../../src/repositories/UserRepository").ReadOnlyUserRepository} ReadOnlyUserRepository */
+/** @typedef {import("../../src/repositories/UserRepository").UserWithId} UserWithId */
 
 const { User } = require("../../src/entities/User");
 

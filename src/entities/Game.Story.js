@@ -112,6 +112,7 @@ class Story {
     /**
      *
      * @param {number} storyIndex
+     * @return {{ name: string }}
      */
     currentPlayerActivity(storyIndex) {
         if (this.#status instanceof StoryStatusWithCorrespondingActivity) {

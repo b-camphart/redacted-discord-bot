@@ -2,7 +2,10 @@ const { UserNotInGame } = require("../../entities/Game.Exceptions");
 const { PlayerInGameUpdatesGameUseCase } = require("../abstractUseCases/PlayerInGameUpdatesGameUseCase");
 const { PlayerActivityChanged } = require("../applicationEvents");
 const { NotEnoughPlayersToStartGame } = require("./validation");
-/** @typedef {import("../../repositories/GameRepository").GameWithId} GameWithId */
+/**
+ * @template {string | undefined} T
+ * @typedef {import("../../entities/types").Game<T>} Game<T>
+ */
 
 class StartGame extends PlayerInGameUpdatesGameUseCase {
     #playerNotifier;
@@ -30,7 +33,7 @@ class StartGame extends PlayerInGameUpdatesGameUseCase {
         this._validatePlayerId(playerId);
         const game = await this._getGameOrThrow(gameId);
         if (!game.hasPlayer(playerId)) throw new UserNotInGame(gameId, playerId);
-        if (game.playerIds().length < 4) throw new NotEnoughPlayersToStartGame(game.id, game.playerIds().length);
+        if (game.playerIds.length < 4) throw new NotEnoughPlayersToStartGame(game.id, game.playerIds.length);
         game.start();
         this._saveUpdate(game);
         await this.#notifyPlayers(game);
@@ -38,13 +41,14 @@ class StartGame extends PlayerInGameUpdatesGameUseCase {
 
     /**
      *
-     * @param {GameWithId} game
+     * @param {Game<string>} game
      */
     async #notifyPlayers(game) {
-        const emissions = game.playerIds().map((/** @type {string} */ userId) => {
+        const gameId = game.id;
+        const emissions = game.playerIds.map((userId) => {
             const activity = game.playerActivity(userId);
             if (activity === undefined) throw "Activity for user in game is undefined.";
-            this.#playerNotifier.notifyPlayer(userId, new PlayerActivityChanged(game.id, userId, activity));
+            this.#playerNotifier.notifyPlayer(userId, new PlayerActivityChanged(gameId, userId, activity));
         });
         await Promise.allSettled(emissions);
     }

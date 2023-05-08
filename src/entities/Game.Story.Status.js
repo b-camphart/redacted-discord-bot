@@ -23,8 +23,13 @@ class StoryStatusWithCorrespondingActivity {
         this.playerId = playerId;
     }
 
-    /** @param {number} storyIndex */
-    toPlayerActivity(storyIndex) {}
+    /**
+     * @param {number} storyIndex
+     * @returns {{ name: string }}
+     */
+    toPlayerActivity(storyIndex) {
+        throw "Abstract class.";
+    }
 }
 
 exports.StoryStatusWithCorrespondingActivity = StoryStatusWithCorrespondingActivity;

@@ -16,18 +16,18 @@ describe("CreateGame", () => {
         contract("userId", (name) => {
             isRequired(name, () => {
                 // @ts-ignore
-                return createGame.create();
+                return createGame.createGame();
             });
             mustBeString(name, (userId) => {
                 // @ts-ignore
-                return createGame.create(userId);
+                return createGame.createGame(userId);
             });
         });
     });
 
     test("user must exist", async () => {
         const userId = "123456";
-        const action = createGame.create(userId);
+        const action = createGame.createGame(userId);
         await expect(action).rejects.toThrow(UserNotFound);
         await expect(action).rejects.toHaveProperty("userId", userId);
     });
@@ -40,7 +40,7 @@ describe("CreateGame", () => {
 
         beforeEach(async () => {
             userId = (await users.add(new User())).id || fail();
-            gameCreated = await createGame.create(userId);
+            gameCreated = await createGame.createGame(userId);
         });
 
         test("game created event is returned", async () => {

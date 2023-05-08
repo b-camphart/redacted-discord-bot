@@ -1,5 +1,8 @@
 /** @typedef {import("../../src/repositories/GameRepository").GameRepository} GameRepository */
-/** @typedef {import("../../src/repositories/GameRepository").GameWithId} GameWithId */
+/**
+ * @template {string | undefined} T
+ * @typedef {import("../../src/entities/types").Game<T>} IGame<T>
+ */
 
 const { Game } = require("../../src/entities/Game");
 
@@ -7,7 +10,7 @@ const { Game } = require("../../src/entities/Game");
  * @implements {GameRepository}
  */
 exports.FakeGameRepository = class FakeGameRepository {
-    /** @type {Map<string, GameWithId>} */
+    /** @type {Map<string, IGame<string>>} */
     #games;
 
     constructor() {
@@ -17,36 +20,35 @@ exports.FakeGameRepository = class FakeGameRepository {
     /**
      *
      * @param {string} gameId
-     * @returns {Promise<Game & {id:string} | undefined>}
      */
     async get(gameId) {
         const storedGame = this.#games.get(gameId);
         if (storedGame === undefined) return undefined;
         const gameCopy = new Game(
             gameId,
-            storedGame.playerIds(),
+            storedGame.playerIds,
             storedGame.isStarted,
-            storedGame.stories(),
+            storedGame.stories,
             storedGame.maxStoryEntries
         );
-        return /** @type {GameWithId} */ (gameCopy);
+        return /** @type {IGame<string>} */ (gameCopy);
     }
 
     /**
      *
-     * @param {Game} game
-     * @returns {Promise<GameWithId>}
+     * @param {IGame<*>} game
+     * @returns {Promise<IGame<string>>}
      */
     async add(game) {
         game.id = `FakeGame: ${this.#games.size}`;
-        const gameWithId = /** @type {GameWithId} */ (game);
+        const gameWithId = /** @type {IGame<string>} */ (game);
         this.#games.set(game.id, gameWithId);
         return gameWithId;
     }
 
     /**
      *
-     * @param {GameWithId} game
+     * @param {IGame<string>} game
      */
     async replace(game) {
         this.#games.set(game.id, game);

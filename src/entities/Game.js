@@ -3,10 +3,18 @@ const { Story } = require("./Game.Story");
 const { param } = require("../validation");
 const { eachValueOf } = require("../validation/arrays");
 const { GameAlreadyStarted, UserNotInGame, InvalidPlayerActivity } = require("./Game.Exceptions");
-const { censorableWords } = require("./Words");
 /** @typedef {import("./Game.Story").StorySnapshot} StorySnapshot */
+/**
+ * @template {string | undefined} T
+ * @typedef {import("./types").Game<T>} IGame
+ */
 
+/**
+ * @template {string | undefined} ID
+ * @implements {IGame<ID>}
+ */
 class Game {
+    /** @type {ID} */
     id;
     /** @type {string[]} */
     #users;
@@ -16,13 +24,14 @@ class Game {
 
     /**
      *
-     * @param {string | undefined} [id]
+     * @param {string} [id]
      * @param {string[]} [users]
      * @param {boolean} [isStarted]
      * @param {StorySnapshot[]} [stories]
      * @param {number} [maxStoryEntries]
      */
     constructor(id = undefined, users = [], isStarted = false, stories = [], maxStoryEntries = 6) {
+        // @ts-ignore
         this.id = id;
         this.#users = Array.from(users);
         this.#isStarted = isStarted;
@@ -42,7 +51,7 @@ class Game {
     /**
      * @returns {string[]} the ids of users ids that have been added to the game so far.
      */
-    playerIds() {
+    get playerIds() {
         const usersCopy = Array.from(this.#users);
         return usersCopy;
     }
@@ -59,6 +68,7 @@ class Game {
     /**
      *
      * @param {string} userId
+     * @return {{ name: string } | undefined}
      */
     playerActivity(userId) {
         if (!this.hasPlayer(userId)) return undefined;
@@ -85,7 +95,7 @@ class Game {
         return this.#isStarted;
     }
 
-    stories() {
+    get stories() {
         return this.#stories.map((story) => story.snapshot);
     }
 
@@ -126,7 +136,7 @@ class Game {
      *
      * @param {number} storyIndex
      */
-    storyActionRequired(storyIndex) {
+    actionRequiredInStory(storyIndex) {
         return this.#stories[storyIndex]?.requiredAction;
     }
 

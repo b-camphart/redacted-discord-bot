@@ -55,7 +55,7 @@ describe("given the game exists", () => {
 
     /**
      *
-     * @param {(game: import("../../../repositories/GameRepository").GameWithId) => void} setup
+     * @param {(game: import("../../../src/entities/types").GameWithId) => void} setup
      */
     const gameSetup = (setup) => {
         return async () => {

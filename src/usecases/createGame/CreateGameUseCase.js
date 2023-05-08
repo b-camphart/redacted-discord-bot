@@ -1,11 +1,10 @@
 const { UserNotFound } = require("../../repositories/UserRepositoryExceptions");
 const { Game } = require("../../entities/Game");
-const { User } = require("../../entities/User");
 const { GameCreated } = require("./GameCreated");
 const { param } = require("../../validation");
 /** @typedef {import("../../repositories/UserRepository").UserWithId} UserWithId */
 
-exports.CreateGame = class CreateGame {
+exports.CreateGameUseCase = class CreateGameUseCase {
     #users;
     #games;
 
@@ -24,10 +23,10 @@ exports.CreateGame = class CreateGame {
      * @param {string} userId
      * @returns {Promise<GameCreated>}
      */
-    async create(userId) {
-        CreateGame.#validateUserId(userId);
+    async createGame(userId) {
+        CreateGameUseCase.#validateUserId(userId);
         const creator = await this.#getCreator(userId);
-        const game = CreateGame.#createGameWithCreator(creator);
+        const game = CreateGameUseCase.#createGameWithCreator(creator);
         const savedGame = await this.#saveGame(game);
         return new GameCreated(savedGame.id, creator);
     }
@@ -46,7 +45,7 @@ exports.CreateGame = class CreateGame {
     /**
      *
      * @param {UserWithId} creator
-     * @returns {Game}
+     * @returns {Game<*>}
      */
     static #createGameWithCreator(creator) {
         const game = new Game();
@@ -56,7 +55,7 @@ exports.CreateGame = class CreateGame {
 
     /**
      *
-     * @param {Game} game
+     * @param {Game<undefined>} game
      */
     async #saveGame(game) {
         return await this.#games.add(game);

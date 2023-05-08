@@ -18,6 +18,7 @@ class StartStory extends PlayerInGameUpdatesGameUseCase {
      * @param {string} gameId
      * @param {string} playerId
      * @param {string} content
+     * @returns {Promise<import("../entities/types").Game<string>>}
      */
     async startStory(gameId, playerId, content) {
         this.#validateInputs(gameId, playerId, content);

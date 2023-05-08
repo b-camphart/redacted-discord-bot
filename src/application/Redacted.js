@@ -24,7 +24,7 @@ class Redacted {
      * @returns
      */
     async createGame(userId) {
-        return await new UseCases.CreateGame(this.#users, this.#games).create(userId);
+        return await new UseCases.CreateGame(this.#users, this.#games).createGame(userId);
     }
 
     /**

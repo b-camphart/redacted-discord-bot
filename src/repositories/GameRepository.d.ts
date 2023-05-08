@@ -1,17 +1,15 @@
-import { Game } from "../src/entities/Game";
-
-export type GameWithId = Game & { id: String };
+import { Game } from "../entities/types";
 
 export interface ReadOnlyGameRepository {
-    get(gameId: string): Promise<GameWithId | undefined>;
+    get(gameId: string): Promise<Game<string> | undefined>;
 }
 
 export interface CreateGameRepository extends ReadOnlyGameRepository {
-    add(game: Game): Promise<GameWithId>;
+    add(game: Game<undefined>): Promise<Game<string>>;
 }
 
 export interface UpdateGameRepository extends ReadOnlyGameRepository {
-    replace(game: GameWithId): Promise<void>;
+    replace(game: Game<string>): Promise<void>;
 }
 
 export interface GameRepository extends CreateGameRepository, UpdateGameRepository {}

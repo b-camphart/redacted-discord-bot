@@ -21,7 +21,8 @@ exports.RepairStory = class RepairStory extends PlayerInGameUpdatesStoryUseCase 
 
         const game = await this._getGameOrThrow(gameId);
 
-        game.repairStory(playerId, storyIndex, replacements);
+        if (typeof replacements === "string") game.repairStory(playerId, storyIndex, replacements);
+        else game.repairStory(playerId, storyIndex, replacements);
         await this._saveUpdate(game);
     }
 };

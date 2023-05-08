@@ -1,6 +1,5 @@
 const { makeGame } = require("../../../doubles/entities/makeGame");
 const { FakeGameRepository } = require("../../../doubles/repositories/FakeGameRepository");
-const { Game } = require("../../../src/entities/Game");
 const { UserNotInGame, InvalidPlayerActivity } = require("../../../src/entities/Game.Exceptions");
 const { PlayerActivity } = require("../../../src/entities/Game.PlayerActivity");
 const { StoryStatus } = require("../../../src/entities/Game.Story.Status");
@@ -84,7 +83,7 @@ describe("Truncate a Story", () => {
     });
 
     describe("given the game exists", () => {
-        /** @type {Game & { id: string }} */
+        /** @type {import("../../../src/entities/types").Game<string>} */
         let game;
 
         beforeEach(async () => {
@@ -144,7 +143,7 @@ describe("Truncate a Story", () => {
                     test("the story is awaiting repair by the next player", async () => {
                         await redactStory.truncateStory(game.id, "user-id", 0, 6);
                         const savedGame = (await games.get(game.id)) || fail("game was removed from repo");
-                        expect(savedGame.storyActionRequired(0)).toEqual(StoryStatus.RepairTruncation.action);
+                        expect(savedGame.actionRequiredInStory(0)).toEqual(StoryStatus.RepairTruncation.action);
                         expect(savedGame.playerAssignedToStory(0)).toEqual("player-1");
                     });
 

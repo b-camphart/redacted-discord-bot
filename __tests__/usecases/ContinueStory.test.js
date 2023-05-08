@@ -1,13 +1,12 @@
 const { makeGame } = require("../../doubles/entities/makeGame");
 const { FakeGameRepository } = require("../../doubles/repositories/FakeGameRepository");
-const { Game } = require("../../src/entities/Game");
 const { InvalidPlayerActivity } = require("../../src/entities/Game.Exceptions");
 const { ContinueStory } = require("../../src/usecases/ContinueStory");
 const { repeat } = require("../../src/utils/iteration");
 const { contract, isRequired, mustBeString, mustBeNumber } = require("../contracts");
 const { expectActionToThrowGameNotFound, expectActionToThrowUserNotInGame } = require("./expectErrors");
 
-/** @type {FakeGameRepository} */
+/** @type {import("../../src/repositories/GameRepository").GameRepository} */
 let games;
 beforeEach(() => {
     games = new FakeGameRepository();
@@ -54,7 +53,7 @@ test("game must exist", async () => {
 });
 
 describe("given the game exists", () => {
-    /** @type {Game & {id : string }} */
+    /** @type {import("../../src/entities/types").Game<string>} */
     let game;
     beforeEach(async () => {
         game = await games.add(makeGame());

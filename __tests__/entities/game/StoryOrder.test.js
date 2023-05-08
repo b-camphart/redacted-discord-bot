@@ -5,7 +5,7 @@ const { PlayerActivity } = require("../../../src/entities/Game.PlayerActivity");
 describe("Story Order", () => {
     const players = ["player-1", "player-2", "player-3", "player-4"];
 
-    /** @type {Game} */
+    /** @type {Game<undefined>} */
     let game;
 
     beforeEach(() => {

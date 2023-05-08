@@ -1,5 +1,5 @@
 module.exports = {
-    CreateGame: require("./createGame/CreateGame").CreateGame,
+    CreateGame: require("./createGame/CreateGameUseCase").CreateGameUseCase,
     JoinGame: require("./joinGame/JoinGame").JoinGame,
     StartGame: require("./startGame/StartGame").StartGame,
     StartStory: require("./StartStory").StartStory,

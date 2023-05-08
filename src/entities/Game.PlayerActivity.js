@@ -32,6 +32,7 @@ class ReadingFinishedStories extends PlayerActivity {
     /**
      *
      * @param {PlayerActivity} other
+     * @returns {other is ReadingFinishedStories}
      */
     isSameActivityAs(other) {
         if (!(other instanceof ReadingFinishedStories)) return false;
@@ -55,6 +56,7 @@ class ActivityInStory extends PlayerActivity {
     /**
      *
      * @param {PlayerActivity} other
+     * @returns {other is ActivityInStory}
      */
     isSameActivityAs(other) {
         if (!(other instanceof ActivityInStory)) return false;
@@ -79,6 +81,7 @@ class RedactingStory extends ActivityInStory {
     /**
      *
      * @param {PlayerActivity} other
+     * @returns {other is RedactingStory}
      */
     isSameActivityAs(other) {
         if (!(other instanceof RedactingStory)) return false;
@@ -103,9 +106,10 @@ class RepairingStory extends ActivityInStory {
     /**
      *
      * @param {PlayerActivity} other
+     * @returns {other is RepairingStory}
      */
     isSameActivityAs(other) {
-        if (!(other instanceof RepairingCensoredStory)) return false;
+        if (!(other instanceof RepairingStory)) return false;
         if (!super.isSameActivityAs(other)) return false;
         if (this.censoredContent != other.censoredContent) return false;
         return true;
@@ -127,6 +131,7 @@ class RepairingCensoredStory extends RepairingStory {
     /**
      *
      * @param {PlayerActivity} other
+     * @returns {other is RepairingCensoredStory}
      */
     isSameActivityAs(other) {
         if (!(other instanceof RepairingCensoredStory)) return false;
@@ -151,6 +156,7 @@ class RepairingTruncatedStory extends RepairingStory {
     /**
      *
      * @param {PlayerActivity} other
+     * @returns {other is RepairingTruncatedStory}
      */
     isSameActivityAs(other) {
         if (!(other instanceof RepairingTruncatedStory)) return false;
@@ -174,6 +180,7 @@ class ContinuingStory extends ActivityInStory {
     /**
      *
      * @param {PlayerActivity} other
+     * @returns {other is ContinuingStory}
      */
     isSameActivityAs(other) {
         if (!(other instanceof ContinuingStory)) return false;
