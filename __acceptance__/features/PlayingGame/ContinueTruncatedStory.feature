@@ -1,4 +1,4 @@
-Feature: Continue a Censored Story
+Feature: Continue a Truncated Story
 
     Background: Story started
         Given "Greg" has created a game
@@ -12,32 +12,34 @@ Feature: Continue a Censored Story
         And "Bob" has filled in the censored words for his assigned story
         And "Bob" has censored his assigned story
 
-    Scenario: Receive censored story to continue
+    Scenario: Receive truncated story to continue
         Given "Greg" has started his story with:
             """
             This will be the greatest story of all time.
             """
-        And "Jim" has censored the following words:
-            | 0 | 4 |
-        When "Billy" fills in the censored words for his assigned story with:
-            | Nothing | lamest |
+        And "Jim" has truncated 4 words
+        When "Billy" completes the truncation for his assigned story with:
+            """
+            thing ever written.
+            """
         Then "Bob" should be continuing a story with the content:
             """
-            Nothing will be the lamest story of all time.
+            This will be the greatest thing ever written.
             """
 
-    Scenario: Continue censored story
+    Scenario: Continue truncated story
         Given "Greg" has started his story with:
             """
             This will be the greatest story of all time.
             """
-        And "Jim" has censored the following words:
-            | 0 | 4 |
-        And "Billy" has filled in the censored words for his assigned story with:
-            | Nothing | lamest |
+        And "Jim" has truncated 4 words
+        And "Billy" has completed the truncation for his assigned story with:
+            """
+            thing ever written.
+            """
         When "Bob" continues his assigned story with:
             """
-            I concurr.  No stories are lame.
+            I just hope I don't mess it up.
             """
         Then "Bob" should be waiting for another story
     

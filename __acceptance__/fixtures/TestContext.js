@@ -79,6 +79,11 @@ class TestContext extends World {
         return await this.#application.getPlayerActivity(this.gameIdOrThrow(), playerId);
     }
 
+    /**
+     *
+     * @param {string} playerId
+     * @returns
+     */
     async joinGame(playerId) {
         const gameId = this.gameIdOrThrow();
         try {
@@ -93,6 +98,11 @@ class TestContext extends World {
         }
     }
 
+    /**
+     *
+     * @param {string} playerId
+     * @returns
+     */
     async startGame(playerId) {
         const gameId = this.gameIdOrThrow();
         try {
@@ -105,6 +115,12 @@ class TestContext extends World {
         }
     }
 
+    /**
+     *
+     * @param {string} playerId
+     * @param {string} content
+     * @returns
+     */
     async startStory(playerId, content) {
         const gameId = this.gameIdOrThrow();
         return await this.#application.startStory(gameId, playerId, content);
