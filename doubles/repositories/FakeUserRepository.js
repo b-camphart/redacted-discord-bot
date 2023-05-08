@@ -45,3 +45,17 @@ exports.FakeUserRepository = class FakeUserRepository {
         return /** @type {UserWithId} */ (user);
     }
 };
+
+/**
+ * @implements {ReadOnlyUserRepository}
+ */
+exports.AllUsersExistRepository = class AllUsersExistRepository {
+    /**
+     *
+     * @param {string} userId
+     * @returns {Promise<UserWithId>}
+     */
+    async get(userId) {
+        return /** @type {UserWithId} */ (new User({ id: userId }));
+    }
+};

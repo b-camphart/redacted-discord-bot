@@ -102,7 +102,8 @@ class Game {
     startStory(playerId, content) {
         if (!this.hasPlayer(playerId)) throw new UserNotInGame(this.id || "", playerId);
 
-        if (this.playerActivity(playerId) !== PlayerActivity.StartingStory) throw new InvalidPlayerActivity();
+        if (this.playerActivity(playerId) !== PlayerActivity.StartingStory)
+            throw new InvalidPlayerActivity(this.playerActivity(playerId), PlayerActivity.StartingStory);
 
         this.#stories.push(Story.start(content, playerId, this.#users));
     }
@@ -114,7 +115,10 @@ class Game {
      * @return {string | undefined} The content of the entry of the story, or undefined if the story, or entry, are not in the game.
      */
     storyEntry(storyIndex, entryIndex) {
-        return this.#stories[storyIndex]?.entry(entryIndex)?.initialContent;
+        const entry = this.#stories[storyIndex]?.entry(entryIndex);
+        if (entry === undefined) return undefined;
+        if (entry.finalContent !== undefined) return entry.finalContent;
+        return entry?.initialContent;
     }
 
     /**
@@ -154,7 +158,9 @@ class Game {
      * @param {number[]} wordIndices
      */
     censorStory(playerId, storyIndex, wordIndices) {
-        eachValueOf(param("wordIndices", wordIndices).isRequired().mustBeArray(), (it) => it.mustBeNumber());
+        eachValueOf(param("wordIndices", wordIndices).isRequired().mustBeArray(), (it) =>
+            it.isRequired().mustBeNumber()
+        );
         const story = this.#getStoryIfValidated(playerId, storyIndex);
         story.censor(playerId, wordIndices);
     }

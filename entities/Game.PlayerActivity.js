@@ -1,3 +1,5 @@
+const { censorableWords } = require("./Words");
+
 class PlayerActivity {
     /**
      *
@@ -71,6 +73,7 @@ class RedactingStory extends ActivityInStory {
     constructor(storyIndex, entryContent) {
         super("redacting-story", storyIndex);
         this.entryContent = entryContent;
+        this.wordBoundaries = censorableWords(entryContent);
     }
 
     /**
@@ -85,17 +88,16 @@ class RedactingStory extends ActivityInStory {
     }
 }
 
-class RepairingCensoredStory extends ActivityInStory {
+class RepairingStory extends ActivityInStory {
     /**
      *
+     * @param {string} fullName
      * @param {number} storyIndex
      * @param {string} censoredContent
-     * @param {[number, number][]} censors
      */
-    constructor(storyIndex, censoredContent, censors) {
-        super("repairing-censored-story", storyIndex);
+    constructor(fullName, storyIndex, censoredContent) {
+        super(fullName, storyIndex);
         this.censoredContent = censoredContent;
-        this.censors = censors;
     }
 
     /**
@@ -106,7 +108,54 @@ class RepairingCensoredStory extends ActivityInStory {
         if (!(other instanceof RepairingCensoredStory)) return false;
         if (!super.isSameActivityAs(other)) return false;
         if (this.censoredContent != other.censoredContent) return false;
+        return true;
+    }
+}
+
+class RepairingCensoredStory extends RepairingStory {
+    /**
+     *
+     * @param {number} storyIndex
+     * @param {string} censoredContent
+     * @param {[number, number][]} censors
+     */
+    constructor(storyIndex, censoredContent, censors) {
+        super("repairing-censored-story", storyIndex, censoredContent);
+        this.censors = censors;
+    }
+
+    /**
+     *
+     * @param {PlayerActivity} other
+     */
+    isSameActivityAs(other) {
+        if (!(other instanceof RepairingCensoredStory)) return false;
+        if (!super.isSameActivityAs(other)) return false;
         if (this.censors != other.censors) return false;
+        return true;
+    }
+}
+
+class RepairingTruncatedStory extends RepairingStory {
+    /**
+     *
+     * @param {number} storyIndex
+     * @param {string} censoredContent
+     * @param {number} truncationIndex
+     */
+    constructor(storyIndex, censoredContent, truncationIndex) {
+        super("repairing-censored-story", storyIndex, censoredContent);
+        this.truncationIndex = truncationIndex;
+    }
+
+    /**
+     *
+     * @param {PlayerActivity} other
+     */
+    isSameActivityAs(other) {
+        if (!(other instanceof RepairingTruncatedStory)) return false;
+        if (!super.isSameActivityAs(other)) return false;
+        if (this.truncationIndex != other.truncationIndex) return false;
         return true;
     }
 }
@@ -158,18 +207,20 @@ exports.PlayerActivity = Object.freeze({
     /**
      *
      * @param {number} storyIndex
-     */
-    RepairingStory: (storyIndex) => {
-        return Object.freeze(new ActivityInStory("repairing-story", storyIndex));
-    },
-    /**
-     *
-     * @param {number} storyIndex
      * @param {string} censoredContent
      * @param {[number, number][]} censors
      */
     RepairingCensoredStory: (storyIndex, censoredContent, censors) => {
         return Object.freeze(new RepairingCensoredStory(storyIndex, censoredContent, censors));
+    },
+    /**
+     *
+     * @param {number} storyIndex
+     * @param {string} censoredContent
+     * @param {number} truncationIndex
+     */
+    RepairingTruncatedStory: (storyIndex, censoredContent, truncationIndex) => {
+        return Object.freeze(new RepairingTruncatedStory(storyIndex, censoredContent, truncationIndex));
     },
 
     /**

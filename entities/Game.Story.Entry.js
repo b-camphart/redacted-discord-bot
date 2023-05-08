@@ -70,6 +70,17 @@ class StoryEntry {
         const censors = this.#getCensoredWordBoundaries(wordIndices, wordBoundaries);
         const censoredContent = this.#censorInitialContent(censors);
 
+        if (!Array.isArray(censors) || censors.length === 0 || !Array.isArray(censors[0])) {
+            const report =
+                "  Content: " +
+                this.initialContent +
+                "\n  wordBoundaries: " +
+                JSON.stringify(wordBoundaries) +
+                "\n  wordIndices: " +
+                JSON.stringify(wordIndices);
+            throw `Censors should be an array of arrays.  Found: <${JSON.stringify(censors)}>\n` + report;
+        }
+
         this.censors = censors;
         this.contributors.push(playerId);
 
@@ -83,6 +94,9 @@ class StoryEntry {
      * @returns
      */
     #getCensoredWordBoundaries(wordIndices, wordBoundaries) {
+        eachValueOf(param("wordIndices", wordIndices).isRequired().mustBeArray(), (it) =>
+            it.isRequired().mustBeNumber()
+        );
         return wordIndices.map((wordIndex) => {
             if (wordIndex < 0 || wordIndex >= wordBoundaries.length) throw new IndexOutOfBounds("");
             return wordBoundaries[wordIndex];
@@ -148,6 +162,9 @@ class StoryEntry {
         if (expectingTruncation) {
             repairedContent = this.#repairTruncation(replacement, /** @type {[number, number]} */ (censors));
         } else {
+            if (!Array.isArray(censors) || censors.length === 0 || !Array.isArray(censors[0])) {
+                throw `Censors should be an array of arrays.  Found: <${JSON.stringify(censors)}>`;
+            }
             repairedContent = this.#repairCensor(replacement, /** @type {[Number, number][]} */ (censors));
         }
 
@@ -172,7 +189,11 @@ class StoryEntry {
         const repairedContent = Array.from(censors)
             .reverse()
             .reduce((content, boundary, index) => {
-                return content.substring(0, boundary[0]) + replacements[index] + content.substring(boundary[1]);
+                return (
+                    content.substring(0, boundary[0]) +
+                    replacements[censors.length - 1 - index] +
+                    content.substring(boundary[1])
+                );
             }, this.initialContent);
 
         censors.reduce((offset, boundary, index) => {

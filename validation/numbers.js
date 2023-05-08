@@ -1,4 +1,5 @@
 const { IndexOutOfBounds } = require("../usecases/validation");
+/** @typedef {import("../utils/range").RangeEnd} RangeEnd */
 
 const ParamValidation = require("./index").ParamValidation;
 
@@ -12,12 +13,6 @@ class OutOfRange extends Error {
     }
 }
 exports.OutOfRange = OutOfRange;
-
-/**
- * @typedef {object} RangeEnd
- * @prop {number} value
- * @prop {boolean} included
- */
 
 /**
  * @param {ParamValidation<number>} validation
@@ -95,21 +90,11 @@ exports.mustBeLessThanOrEqualTo = (validation, comparison) => {
  * @param {number} num
  * @returns {RangeEnd}
  */
-exports.exclusive = function (num) {
-    return {
-        value: num,
-        included: false,
-    };
-};
+exports.exclusive = require("../utils/range").exclusive;
 
 /**
  *
  * @param {number} num
  * @returns {RangeEnd}
  */
-exports.inclusive = function (num) {
-    return {
-        value: num,
-        included: true,
-    };
-};
+exports.inclusive = require("../utils/range").inclusive;

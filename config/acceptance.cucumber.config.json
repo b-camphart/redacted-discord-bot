@@ -1,0 +1,7 @@
+{
+    "default": {
+        "publishQuiet": true,
+        "require": ["./__acceptance__/steps"],
+        "paths": ["./__acceptance__/features"]
+    }
+}

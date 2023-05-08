@@ -72,6 +72,6 @@ exports.RedactStory = class RedactStory extends PlayerInGameUpdatesStoryUseCase 
      */
     static #validateTruncationCount(truncationCount) {
         const numberParam = param("truncationCount", truncationCount).isRequired().mustBeNumber();
-        mustBeInRange(numberParam, exclusive(0), exclusive(7));
+        mustBeInRange(numberParam, exclusive(0), inclusive(7));
     }
 };

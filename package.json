@@ -5,7 +5,9 @@
     "main": "server.js",
     "scripts": {
         "start": "node server.js",
-        "test": "jest"
+        "test": "jest --config \"./config/unitTests.jest.config.json\"",
+        "autotest": "jest --config \"./config/unitTests.jest.config.json\" --watch-all",
+        "acceptance": "cucumber-js --config \"./config/acceptance.cucumber.config.json\""
     },
     "dependencies": {
         "discord.js": "14.9.0",
@@ -30,6 +32,7 @@
         "express"
     ],
     "devDependencies": {
+        "@cucumber/cucumber": "^9.1.2",
         "@types/jest": "^29.5.1",
         "jest": "^29.5.0"
     }

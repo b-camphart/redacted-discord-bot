@@ -151,6 +151,13 @@ describe("Repair a Censored Story", () => {
                             expect(savedGame.playerAssignedToStory(1)).toEqual("player-2");
                         });
 
+                        test("the story is repaired", async () => {
+                            await repairStory.repairStory(game.id, "user-id", 1, ["replaced"]);
+                            const savedGame = (await games.get(game.id)) || fail("failed to get game.");
+                            expect(savedGame.storyEntry(1, 0)).toEqual("content replaced");
+                            expect(savedGame.playerAssignedToStory(1)).toEqual("player-2");
+                        });
+
                         describe("the player already redacted the other story", () => {
                             beforeEach(() => {
                                 game.censorStory("user-id", 2, [1]);
@@ -174,6 +181,15 @@ describe("Repair a Censored Story", () => {
                                 expect(savedGame.storyActionRequired(1)).toEqual(StoryStatus.Completed.action);
                             });
                         });
+                    });
+
+                    test("repairs the story in the proper order", async () => {
+                        game.startStory("player-3", "This is replaceable content.");
+                        game.startStory("player-4", "content four");
+                        game.censorStory("player-4", 1, [0, 2]);
+                        await repairStory.repairStory(game.id, "user-id", 1, ["Jonathan", "boring"]);
+                        const savedGame = (await games.get(game.id)) || fail("failed to get game.");
+                        expect(savedGame.storyEntry(1, 0)).toEqual("Jonathan is boring content.");
                     });
                 });
             });

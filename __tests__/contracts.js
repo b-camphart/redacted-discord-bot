@@ -1,3 +1,5 @@
+const { param } = require("../validation");
+
 /**
  *
  * @param {string} paramName

@@ -71,7 +71,7 @@ describe("Truncate a Story", () => {
             it("must be less than 7", async () => {
                 const action = redactStory.truncateStory("game-id", "user-id", 0, 8);
                 await expect(action).rejects.toThrow(OutOfRange);
-                await expect(action).rejects.toThrow("truncationCount <8> must be less than 7.");
+                await expect(action).rejects.toThrow("truncationCount <8> must be less than or equal to 7.");
             });
         });
     });
@@ -156,7 +156,9 @@ describe("Truncate a Story", () => {
                         test("the player is repairing a story", async () => {
                             await redactStory.truncateStory(game.id, "user-id", 0, 6);
                             const savedGame = (await games.get(game.id)) || fail("game was removed from repo");
-                            expect(savedGame.playerActivity("user-id")).toEqual(PlayerActivity.RepairingStory(2));
+                            expect(savedGame.playerActivity("user-id")).toEqual(
+                                PlayerActivity.RepairingTruncatedStory(2, "content ___", 8)
+                            );
                         });
                     });
 
@@ -168,7 +170,9 @@ describe("Truncate a Story", () => {
                         });
                         test("the player is repairing a story", async () => {
                             const savedGame = (await games.get(game.id)) || fail("game was removed from repo");
-                            expect(savedGame.playerActivity("user-id")).toEqual(PlayerActivity.RepairingStory(2));
+                            expect(savedGame.playerActivity("user-id")).toEqual(
+                                PlayerActivity.RepairingTruncatedStory(2, "content ___", 8)
+                            );
                         });
                     });
                 });

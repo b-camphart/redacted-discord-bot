@@ -19,7 +19,7 @@ class ParamValidation {
  * @returns {ParamValidation<T>}
  */
 ParamValidation.prototype.isRequired = function () {
-    if (this.value === undefined) throw new TypeError(`${this.name} is required.`);
+    if (this.value === undefined || this.value === null) throw new TypeError(`${this.name} is required.`);
     return /** @type {ParamValidation<T>} */ (this);
 };
 

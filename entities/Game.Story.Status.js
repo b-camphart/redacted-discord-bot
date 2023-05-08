@@ -80,7 +80,7 @@ class Repair extends StoryStatusWithCorrespondingActivity {
                 this.redaction.censors
             );
         }
-        return PlayerActivity.RepairingStory(storyIndex);
+        return PlayerActivity.RepairingTruncatedStory(storyIndex, this.redaction.censoredContent, this.redaction.from);
     }
 }
 
