@@ -3,6 +3,7 @@ const { Story } = require("./Game.Story");
 const { param } = require("../validation");
 const { eachValueOf } = require("../validation/arrays");
 const { GameAlreadyStarted, UserNotInGame, InvalidPlayerActivity } = require("./Game.Exceptions");
+const { censorableWords } = require("./Words");
 /** @typedef {import("./Game.Story").StorySnapshot} StorySnapshot */
 
 class Game {

@@ -23,7 +23,7 @@ class StartStory extends PlayerInGameUpdatesGameUseCase {
         this.#validateInputs(gameId, playerId, content);
         const game = await this._getGameOrThrow(gameId);
         game.startStory(playerId, content);
-        await this._games.replace(game);
+        await this._saveUpdate(game);
         return game;
     }
 

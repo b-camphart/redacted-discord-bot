@@ -24,7 +24,7 @@ exports.RedactStory = class RedactStory extends PlayerInGameUpdatesStoryUseCase 
         RedactStory.#validateWordIndices(wordIndices);
         const game = await this._getGameOrThrow(gameId);
         game.censorStory(playerId, storyIndex, wordIndices);
-        this._games.replace(game);
+        this._saveUpdate(game);
     }
 
     /**
@@ -39,7 +39,7 @@ exports.RedactStory = class RedactStory extends PlayerInGameUpdatesStoryUseCase 
         RedactStory.#validateTruncationCount(truncationCount);
         const game = await this._getGameOrThrow(gameId);
         game.truncateStory(playerId, storyIndex, truncationCount);
-        this._games.replace(game);
+        this._saveUpdate(game);
     }
 
     /**

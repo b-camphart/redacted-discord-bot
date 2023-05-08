@@ -5,4 +5,5 @@ module.exports = {
     StartStory: require("./StartStory").StartStory,
     RedactStory: require("./RedactStory").RedactStory,
     RepairStory: require("./RepairStory").RepairStory,
+    ContinueStory: require("./ContinueStory").ContinueStory,
 };

@@ -42,6 +42,9 @@ class StoryEntry {
      * @param {string} [finalContent]
      */
     constructor(initialContent, contributors, censors, finalContent) {
+        const availableCensors = censorableWords(initialContent);
+        if (availableCensors.length === 0) throw new Error("Content is empty of meaningful words.");
+
         this.initialContent = initialContent;
         this.contributors = contributors;
         this.censors = censors;

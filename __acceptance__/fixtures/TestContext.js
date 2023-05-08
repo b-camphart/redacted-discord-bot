@@ -154,6 +154,17 @@ class TestContext extends World {
         const gameId = this.gameIdOrThrow();
         await this.#application.repairStory(gameId, playerId, storyIndex, replacement);
     }
+
+    /**
+     *
+     * @param {string} playerId
+     * @param {number} storyIndex
+     * @param {string} content
+     */
+    async continueStory(playerId, storyIndex, content) {
+        const gameId = this.gameIdOrThrow();
+        this.#application.continueStory(gameId, playerId, storyIndex, content);
+    }
 }
 
 exports.TestContext = TestContext;

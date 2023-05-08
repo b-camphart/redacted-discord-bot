@@ -102,6 +102,18 @@ class Redacted {
     async repairStory(gameId, playerId, storyIndex, replacements) {
         return await new UseCases.RepairStory(this.#games).repairStory(gameId, playerId, storyIndex, replacements);
     }
+
+    /**
+     *
+     * @param {string} gameId
+     * @param {string} playerId
+     * @param {number} storyIndex
+     * @param {string} content
+     * @returns
+     */
+    async continueStory(gameId, playerId, storyIndex, content) {
+        return await new UseCases.ContinueStory(this.#games).continueStory(gameId, playerId, storyIndex, content);
+    }
 }
 
 exports.Redacted = Redacted;

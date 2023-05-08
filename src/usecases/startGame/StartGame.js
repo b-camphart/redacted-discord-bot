@@ -32,7 +32,7 @@ class StartGame extends PlayerInGameUpdatesGameUseCase {
         if (!game.hasPlayer(playerId)) throw new UserNotInGame(gameId, playerId);
         if (game.playerIds().length < 4) throw new NotEnoughPlayersToStartGame(game.id, game.playerIds().length);
         game.start();
-        this._games.replace(game);
+        this._saveUpdate(game);
         await this.#notifyPlayers(game);
     }
 

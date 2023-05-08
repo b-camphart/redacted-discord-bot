@@ -1,3 +1,4 @@
+const { IndexOutOfBounds } = require("../usecases/validation");
 const { param, mustBeType } = require("../validation");
 const { eachValueOf, mustHaveLengthInRange } = require("../validation/arrays");
 const { inclusive } = require("../validation/numbers");
@@ -5,6 +6,7 @@ const { InvalidPlayerActivity } = require("./Game.Exceptions");
 const { PlayerActivity } = require("./Game.PlayerActivity");
 const { StoryEntry } = require("./Game.Story.Entry");
 const { StoryStatus, StoryStatusWithCorrespondingActivity } = require("./Game.Story.Status");
+const { censorableWords } = require("./Words");
 /** @typedef {import("./Game.Story.Entry").StoryEntrySnapshot} StoryEntrySnapshot */
 
 /**
@@ -94,7 +96,9 @@ class Story {
      * @returns {StoryEntrySnapshot | undefined}
      */
     entry(index) {
-        return this.#entries[index].snapshot;
+        if (index < 0 || index > this.#entries.length)
+            throw new IndexOutOfBounds(`${index} is out of bounds [0 .. ${this.#entries.length}]`);
+        return this.#entries[index]?.snapshot;
     }
 
     /**
@@ -269,9 +273,10 @@ class Story {
         this.#ensureCurrentlyAssignedTo(playerId);
         this.#ensureRequiresAction("continue");
 
+        const newEntry = StoryEntry.new(content, playerId);
         const nextPlayer = Story.#getNextPlayerId(this.#playerIds, this.assignedTo);
         this.#status = StoryStatus.Redact(nextPlayer, this.#entries[0].initialContent);
-        this.#entries.push(StoryEntry.new(content, playerId));
+        this.#entries.push(newEntry);
     }
 }
 

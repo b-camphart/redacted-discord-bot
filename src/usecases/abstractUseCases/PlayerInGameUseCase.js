@@ -9,6 +9,16 @@ class PlayerInGameUseCase extends GameUseCase {
 
     /**
      *
+     * @param {any} gameId
+     * @param {any} playerId
+     */
+    _validateInputs(gameId, playerId) {
+        this._validateGameId(gameId);
+        this._validatePlayerId(playerId);
+    }
+
+    /**
+     *
      * @param {any} playerId
      */
     _validatePlayerId(playerId) {

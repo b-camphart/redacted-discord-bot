@@ -12,6 +12,18 @@ class PlayerInGameUpdatesStoryUseCase extends PlayerInGameUpdatesGameUseCase {
 
     /**
      *
+     * @param {any} gameId
+     * @param {any} playerId
+     * @param {any} storyIndex
+     */
+    // @ts-ignore
+    _validateInputs(gameId, playerId, storyIndex) {
+        super._validateInputs(gameId, playerId);
+        this._validateStoryIndex(storyIndex);
+    }
+
+    /**
+     *
      * @param {any} storyIndex
      */
     _validateStoryIndex(storyIndex) {

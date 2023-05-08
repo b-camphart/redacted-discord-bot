@@ -1,5 +1,5 @@
-/** @typedef {import("../../repositories/GameRepository").GameRepository} GameRepository */
-/** @typedef {import("../../repositories/GameRepository").GameWithId} GameWithId */
+/** @typedef {import("../../src/repositories/GameRepository").GameRepository} GameRepository */
+/** @typedef {import("../../src/repositories/GameRepository").GameWithId} GameWithId */
 
 const { Game } = require("../../src/entities/Game");
 
@@ -17,6 +17,7 @@ exports.FakeGameRepository = class FakeGameRepository {
     /**
      *
      * @param {string} gameId
+     * @returns {Promise<Game & {id:string} | undefined>}
      */
     async get(gameId) {
         const storedGame = this.#games.get(gameId);
