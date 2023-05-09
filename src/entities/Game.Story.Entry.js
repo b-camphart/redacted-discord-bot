@@ -171,6 +171,10 @@ class StoryEntry {
             repairedContent = this.#repairCensor(replacement, /** @type {[Number, number][]} */ (censors));
         }
 
+        if (repairedContent === undefined) {
+            throw "Did not properly repair the story entry.";
+        }
+
         this.contributors.push(playerId);
         this.finalContent = repairedContent;
 

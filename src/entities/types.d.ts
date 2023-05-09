@@ -9,6 +9,7 @@ export interface Game<ID extends string | undefined> {
     playerActivity(playerId: string): PlayerActivity | undefined;
 
     readonly isStarted: boolean;
+    readonly isCompleted: boolean;
     /**
      * @throws {GameAlreadyStarted} if the game was already started
      */

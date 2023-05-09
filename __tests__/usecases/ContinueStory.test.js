@@ -85,7 +85,7 @@ describe("given the game exists", () => {
                 await expect(action).rejects.toThrow("Content is empty of meaningful words.");
             });
             describe("given the provided content is censorable", () => {
-                test("the story content should match the provided content", async () => {
+                test("the story content matches the provided content", async () => {
                     await continueStory(game.id, "player-id", 0, "Meaningful content.");
                     const savedGame = (await games.get(game.id)) || fail("");
                     expect(savedGame.storyEntry(0, 1)).toBe("Meaningful content.");

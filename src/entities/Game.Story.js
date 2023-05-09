@@ -14,6 +14,7 @@ const { censorableWords } = require("./Words");
  * @prop {StoryEntrySnapshot[]} entries
  * @prop {string[]} playerIds
  * @prop {StoryStatus} status
+ * @property {(playerId: string) => boolean} wasStartedBy
  */
 
 /**
@@ -159,6 +160,7 @@ class Story {
             entries: this.entries(),
             playerIds: Array.from(this.#playerIds),
             status: this.#status,
+            wasStartedBy: (playerId) => this.#entries[0].contributors[0] === playerId,
         };
     }
 
@@ -217,7 +219,7 @@ class Story {
         this.#ensureCurrentlyAssignedTo(playerId);
         this.#ensureRequiresAction("redact");
 
-        const entry = this.#getEntryOrThrow(0);
+        const entry = this.#getEntryOrThrow(this.#entries.length - 1);
 
         const { censoredContent, censors } = entry.censor(playerId, wordIndices);
 
@@ -235,7 +237,7 @@ class Story {
         this.#ensureCurrentlyAssignedTo(playerId);
         this.#ensureRequiresAction("redact");
 
-        const entry = this.#getEntryOrThrow(0);
+        const entry = this.#getEntryOrThrow(this.#entries.length - 1);
 
         const { censoredContent, truncateFrom } = entry.truncate(playerId, truncationCount);
 
@@ -253,7 +255,7 @@ class Story {
         this.#ensureCurrentlyAssignedTo(playerId);
         this.#ensureRequiresAction("repair");
 
-        const entry = this.#getEntryOrThrow(0);
+        const entry = this.#getEntryOrThrow(this.#entries.length - 1);
 
         const repairedContent = entry.repair(playerId, replacement);
 

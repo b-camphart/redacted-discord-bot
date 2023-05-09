@@ -1,6 +1,9 @@
-const { Then } = require("@cucumber/cucumber");
+const { Then, DataTable } = require("@cucumber/cucumber");
 const { PlayerActivity } = require("../../src/entities/Game.PlayerActivity");
+const { TestContext } = require("../fixtures/TestContext");
 const assert = require("assert");
+const { param } = require("../../src/validation");
+const { censorableWords } = require("../../src/entities/Words");
 
 Then("{string} should be waiting for the game to start", async function (username) {
     const activity = await this.getPlayerActivity(username);
@@ -65,3 +68,35 @@ Then("{string} should be continuing a story with the content:", async function (
     assert.equal(activity.name, PlayerActivity.ContinuingStory(0, "").name);
     assert.equal(activity.repairedContent, expectedContent);
 });
+
+Then(
+    "every player should see a story with:",
+    /**
+     * @this {TestContext}
+     * @param {DataTable} dataTable
+     */
+    async function (dataTable) {
+        const expectedValues = dataTable.hashes().map((hash) => {
+            return {
+                content: hash["content"],
+                censors: JSON.parse(hash["redactions"]),
+            };
+        });
+
+        const playerIds = (await this.getGameOrThrow()).playerIds;
+        for (const playerId of playerIds) {
+            const activity = await this.getPlayerActivity(playerId);
+            const stories = param("activity", activity).mustHaveProperty("stories").mustBeArray().value;
+            let storyReport = "\n";
+            const foundStory = stories.find((story, storyIndex) => {
+                storyReport += `====== Story ${storyIndex + 1} ======\n`;
+                const entries = param("story", story).mustBeArray().value;
+                return entries.every((entry, index) => {
+                    storyReport += entry.content + " | " + JSON.stringify(entry.censors) + "\n";
+                    return entry.content === expectedValues[index].content;
+                });
+            });
+            assert.ok(foundStory, storyReport);
+        }
+    }
+);

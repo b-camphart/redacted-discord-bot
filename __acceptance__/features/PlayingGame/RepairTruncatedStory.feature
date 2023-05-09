@@ -22,6 +22,6 @@ Feature: Repair a Truncated Story
         And "Billy" should be repairing a story with a truncation to fill in
 
     Scenario: Repair censored words
-        Given "Jim" has truncated 5 words
+        Given "Jim" has truncated the last 5 words
         When "Billy" completes the truncation for his assigned story
         Then "Billy" should be waiting for another story

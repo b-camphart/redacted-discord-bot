@@ -8,6 +8,7 @@ const { NotEnoughPlayersToStartGame } = require("../../src/usecases/startGame/va
 const { GameAlreadyStarted } = require("../../src/entities/Game.Exceptions");
 
 class TestContext extends World {
+    #games;
     /** @type {Redacted} */
     #application;
     /** @type {string | undefined} */
@@ -21,11 +22,8 @@ class TestContext extends World {
      */
     constructor(options) {
         super(options);
-        this.#application = new Redacted(
-            new AllUsersExistRepository(),
-            new FakeGameRepository(),
-            new DumbPlayerNotifier()
-        );
+        this.#games = new FakeGameRepository();
+        this.#application = new Redacted(new AllUsersExistRepository(), this.#games, new DumbPlayerNotifier());
         this.#messagesPerPlayer = new Map();
     }
 
@@ -57,6 +55,12 @@ class TestContext extends World {
         const gameId = this.#gameId;
         if (gameId === undefined) throw "Game not yet created.";
         return gameId;
+    }
+
+    async getGameOrThrow() {
+        const game = await this.#games.get(this.gameIdOrThrow());
+        if (game === undefined) throw "Game not found";
+        return game;
     }
 
     /**
@@ -101,12 +105,13 @@ class TestContext extends World {
     /**
      *
      * @param {string} playerId
+     * @param {number} [maxEntries]
      * @returns
      */
-    async startGame(playerId) {
+    async startGame(playerId, maxEntries) {
         const gameId = this.gameIdOrThrow();
         try {
-            return await this.#application.startGame(gameId, playerId);
+            return await this.#application.startGame(gameId, playerId, maxEntries);
         } catch (failure) {
             if (failure instanceof NotEnoughPlayersToStartGame) {
                 this.#addMessage(playerId, "Not enough players");
@@ -179,7 +184,7 @@ class TestContext extends World {
      */
     async continueStory(playerId, storyIndex, content) {
         const gameId = this.gameIdOrThrow();
-        this.#application.continueStory(gameId, playerId, storyIndex, content);
+        await this.#application.continueStory(gameId, playerId, storyIndex, content);
     }
 }
 

@@ -50,10 +50,11 @@ class Redacted {
      *
      * @param {string} gameId
      * @param {string} playerId
+     * @param {number} [maxEntries]
      * @returns
      */
-    async startGame(gameId, playerId) {
-        return await new UseCases.StartGame(this.#games, this.#playerNotifier).startGame(gameId, playerId);
+    async startGame(gameId, playerId, maxEntries) {
+        return await new UseCases.StartGame(this.#games, this.#playerNotifier).startGame(gameId, playerId, maxEntries);
     }
 
     /**

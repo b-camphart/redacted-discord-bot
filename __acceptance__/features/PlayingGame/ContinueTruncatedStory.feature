@@ -17,7 +17,7 @@ Feature: Continue a Truncated Story
             """
             This will be the greatest story of all time.
             """
-        And "Jim" has truncated 4 words
+        And "Jim" has truncated the last 4 words
         When "Billy" completes the truncation for his assigned story with:
             """
             thing ever written.
@@ -32,7 +32,7 @@ Feature: Continue a Truncated Story
             """
             This will be the greatest story of all time.
             """
-        And "Jim" has truncated 4 words
+        And "Jim" has truncated the last 4 words
         And "Billy" has completed the truncation for his assigned story with:
             """
             thing ever written.
@@ -42,4 +42,3 @@ Feature: Continue a Truncated Story
             I just hope I don't mess it up.
             """
         Then "Bob" should be waiting for another story
-    

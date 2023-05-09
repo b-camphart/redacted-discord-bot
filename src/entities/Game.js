@@ -95,6 +95,10 @@ class Game {
         return this.#isStarted;
     }
 
+    get isCompleted() {
+        return this.#stories.every((story) => story.isCompleted);
+    }
+
     get stories() {
         return this.#stories.map((story) => story.snapshot);
     }
