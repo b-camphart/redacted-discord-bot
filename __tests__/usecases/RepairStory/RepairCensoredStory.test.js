@@ -10,50 +10,41 @@ const { contract, isRequired, mustBeString, mustBeNumber, mustBeArray } = requir
 
 /** @type {FakeGameRepository} */
 let games;
-/** @type {RepairStory} */
-let repairStory;
 
 beforeEach(() => {
     games = new FakeGameRepository();
-    repairStory = new RepairStory(games);
 });
 
 describe("Repair a Censored Story", () => {
     describe("contract", () => {
         contract("gameId", (name) => {
             isRequired(name, () => {
-                // @ts-ignore
-                return repairStory.repairStory();
+                return repairCensoredStory();
             });
             mustBeString(name, (gameId) => {
-                // @ts-ignore
-                return repairStory.repairStory(gameId);
+                return repairCensoredStory(gameId);
             });
         });
         contract("playerId", (name) => {
             isRequired(name, () => {
-                // @ts-ignore
-                return repairStory.repairStory("game-id");
+                return repairCensoredStory("game-id");
             });
             mustBeString(name, (playerId) => {
-                // @ts-ignore
-                return repairStory.repairStory("game-id", playerId);
+                return repairCensoredStory("game-id", playerId);
             });
         });
         contract("storyIndex", (name) => {
             isRequired(name, () => {
-                // @ts-ignore
-                return repairStory.repairStory("game-id", "player-id");
+                return repairCensoredStory("game-id", "player-id");
             });
             mustBeNumber(name, (nonNumber) => {
-                // @ts-ignore
-                return repairStory.repairStory("game-id", "player-id", nonNumber);
+                return repairCensoredStory("game-id", "player-id", nonNumber);
             });
         });
     });
 
     test("game must exist", async () => {
-        const rejection = expect(repairStory.repairStory("unknown-game-id", "user-id", 0, [])).rejects;
+        const rejection = expect(repairCensoredStory("unknown-game-id", "user-id", 0, [])).rejects;
         await rejection.toThrow(GameNotFound);
     });
 
@@ -65,7 +56,7 @@ describe("Repair a Censored Story", () => {
         });
 
         test("player must be in the game", async () => {
-            const rejection = expect(repairStory.repairStory(game.id, "unknown-user-id", 0, [])).rejects;
+            const rejection = expect(repairCensoredStory(game.id, "unknown-user-id", 0, [])).rejects;
             await rejection.toThrow(UserNotInGame);
         });
 
@@ -75,7 +66,7 @@ describe("Repair a Censored Story", () => {
             });
 
             test("the game must have started", async () => {
-                const rejection = expect(repairStory.repairStory(game.id, "user-id", 0, [])).rejects;
+                const rejection = expect(repairCensoredStory(game.id, "user-id", 0, [])).rejects;
                 await rejection.toThrow(InvalidPlayerActivity);
             });
 
@@ -88,7 +79,7 @@ describe("Repair a Censored Story", () => {
                 });
 
                 test("the player must have started a story", async () => {
-                    const rejection = expect(repairStory.repairStory(game.id, "user-id", 0, [])).rejects;
+                    const rejection = expect(repairCensoredStory(game.id, "user-id", 0, [])).rejects;
                     await rejection.toThrow(InvalidPlayerActivity);
                 });
 
@@ -98,7 +89,7 @@ describe("Repair a Censored Story", () => {
                     });
 
                     test("a story must be assigned to the player for repair", async () => {
-                        const rejection = expect(repairStory.repairStory(game.id, "user-id", 0, [])).rejects;
+                        const rejection = expect(repairCensoredStory(game.id, "user-id", 0, [])).rejects;
                         await rejection.toThrow(InvalidPlayerActivity);
                     });
 
@@ -110,33 +101,31 @@ describe("Repair a Censored Story", () => {
                         });
 
                         test("the storyIndex must be the assigned story to repair", async () => {
-                            const rejection = expect(repairStory.repairStory(game.id, "user-id", 2, [])).rejects;
+                            const rejection = expect(repairCensoredStory(game.id, "user-id", 2, [])).rejects;
                             await rejection.toThrow(InvalidPlayerActivity);
                         });
 
                         contract("replacements", (name) => {
                             isRequired(name, () => {
-                                // @ts-ignore
-                                return repairStory.repairStory(game.id, "user-id", 1);
+                                return repairCensoredStory(game.id, "user-id", 1);
                             });
                             mustBeArray(name, (nonArray) => {
-                                return repairStory.repairStory(game.id, "user-id", 1, nonArray);
+                                return repairCensoredStory(game.id, "user-id", 1, nonArray);
                             });
                             it("must have length equal to number of censored words", async () => {
-                                const rejection = expect(repairStory.repairStory(game.id, "user-id", 1, [])).rejects;
+                                const rejection = expect(repairCensoredStory(game.id, "user-id", 1, [])).rejects;
                                 await rejection.toThrow(MustHaveLength);
                                 await rejection.toThrow("replacements must have length of 1");
                             });
                             it("must only contain strings", async () => {
-                                // @ts-ignore
-                                const rejection = expect(repairStory.repairStory(game.id, "user-id", 1, [14])).rejects;
+                                const rejection = expect(repairCensoredStory(game.id, "user-id", 1, [14])).rejects;
                                 await rejection.toThrow(TypeError);
                                 await rejection.toThrow("each value of replacements must be a string.");
                             });
                         });
 
                         test("the player is redacting a story", async () => {
-                            await repairStory.repairStory(game.id, "user-id", 1, ["replaced"]);
+                            await repairCensoredStory(game.id, "user-id", 1, ["replaced"]);
                             const savedGame = (await games.get(game.id)) || fail("failed to get game.");
                             expect(savedGame.playerActivity("user-id")).toEqual(
                                 PlayerActivity.RedactingStory(2, "content four")
@@ -144,14 +133,14 @@ describe("Repair a Censored Story", () => {
                         });
 
                         test("the story is awaiting a continuation from the next player", async () => {
-                            await repairStory.repairStory(game.id, "user-id", 1, ["replaced"]);
+                            await repairCensoredStory(game.id, "user-id", 1, ["replaced"]);
                             const savedGame = (await games.get(game.id)) || fail("failed to get game.");
                             expect(savedGame.actionRequiredInStory(1)).toEqual(StoryStatus.Continue.action);
                             expect(savedGame.playerAssignedToStory(1)).toEqual("player-2");
                         });
 
                         test("the story is repaired", async () => {
-                            await repairStory.repairStory(game.id, "user-id", 1, ["replaced"]);
+                            await repairCensoredStory(game.id, "user-id", 1, ["replaced"]);
                             const savedGame = (await games.get(game.id)) || fail("failed to get game.");
                             expect(savedGame.storyEntry(1, 0)).toEqual("content replaced");
                             expect(savedGame.playerAssignedToStory(1)).toEqual("player-2");
@@ -163,7 +152,7 @@ describe("Repair a Censored Story", () => {
                             });
 
                             test("the player is awaiting a story", async () => {
-                                await repairStory.repairStory(game.id, "user-id", 1, ["replaced"]);
+                                await repairCensoredStory(game.id, "user-id", 1, ["replaced"]);
                                 const savedGame = (await games.get(game.id)) || fail("failed to get game.");
                                 expect(savedGame.playerActivity("user-id")).toEqual(PlayerActivity.AwaitingStory);
                             });
@@ -174,7 +163,7 @@ describe("Repair a Censored Story", () => {
                         game.startStory("player-3", "This is replaceable content.");
                         game.startStory("player-4", "content four");
                         game.censorStory("player-4", 1, [0, 2]);
-                        await repairStory.repairStory(game.id, "user-id", 1, ["Jonathan", "boring"]);
+                        await repairCensoredStory(game.id, "user-id", 1, ["Jonathan", "boring"]);
                         const savedGame = (await games.get(game.id)) || fail("failed to get game.");
                         expect(savedGame.storyEntry(1, 0)).toEqual("Jonathan is boring content.");
                     });
@@ -194,11 +183,15 @@ describe("Repair a Censored Story", () => {
                 });
 
                 test("the story is completed", async () => {
-                    await repairStory.repairStory(game.id, "user-id", 1, ["replaced"]);
+                    await repairCensoredStory(game.id, "user-id", 1, ["replaced"]);
                     const savedGame = (await games.get(game.id)) || fail("failed to get game.");
                     expect(savedGame.actionRequiredInStory(1)).toEqual(StoryStatus.Completed.action);
                 });
             });
         });
     });
+});
+
+const repairCensoredStory = require("../../../doubles/usecases").make.repairCensoredStory({
+    games: () => games,
 });

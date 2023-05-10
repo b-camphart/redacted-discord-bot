@@ -9,50 +9,41 @@ const { contract, isRequired, mustBeString, mustBeNumber } = require("../../cont
 
 /** @type {FakeGameRepository} */
 let games;
-/** @type {RepairStory} */
-let repairStory;
 
 beforeEach(() => {
     games = new FakeGameRepository();
-    repairStory = new RepairStory(games);
 });
 
 describe("Repair a Truncated Story", () => {
     describe("contract", () => {
         contract("gameId", (name) => {
             isRequired(name, () => {
-                // @ts-ignore
-                return repairStory.repairStory();
+                return repairTruncatedStory();
             });
             mustBeString(name, (gameId) => {
-                // @ts-ignore
-                return repairStory.repairStory(gameId);
+                return repairTruncatedStory(gameId);
             });
         });
         contract("playerId", (name) => {
             isRequired(name, () => {
-                // @ts-ignore
-                return repairStory.repairStory("game-id");
+                return repairTruncatedStory("game-id");
             });
             mustBeString(name, (playerId) => {
-                // @ts-ignore
-                return repairStory.repairStory("game-id", playerId);
+                return repairTruncatedStory("game-id", playerId);
             });
         });
         contract("storyIndex", (name) => {
             isRequired(name, () => {
-                // @ts-ignore
-                return repairStory.repairStory("game-id", "player-id");
+                return repairTruncatedStory("game-id", "player-id");
             });
             mustBeNumber(name, (nonNumber) => {
-                // @ts-ignore
-                return repairStory.repairStory("game-id", "player-id", nonNumber);
+                return repairTruncatedStory("game-id", "player-id", nonNumber);
             });
         });
     });
 
     test("game must exist", async () => {
-        const rejection = expect(repairStory.repairStory("unknown-game-id", "user-id", 0, "replaced")).rejects;
+        const rejection = expect(repairTruncatedStory("unknown-game-id", "user-id", 0, "replaced")).rejects;
         await rejection.toThrow(GameNotFound);
     });
 
@@ -64,7 +55,7 @@ describe("Repair a Truncated Story", () => {
         });
 
         test("player must be in the game", async () => {
-            const rejection = expect(repairStory.repairStory(game.id, "unknown-user-id", 0, "replaced")).rejects;
+            const rejection = expect(repairTruncatedStory(game.id, "unknown-user-id", 0, "replaced")).rejects;
             await rejection.toThrow(UserNotInGame);
         });
 
@@ -74,7 +65,7 @@ describe("Repair a Truncated Story", () => {
             });
 
             test("the game must have started", async () => {
-                const rejection = expect(repairStory.repairStory(game.id, "user-id", 0, "replaced")).rejects;
+                const rejection = expect(repairTruncatedStory(game.id, "user-id", 0, "replaced")).rejects;
                 await rejection.toThrow(InvalidPlayerActivity);
             });
 
@@ -87,7 +78,7 @@ describe("Repair a Truncated Story", () => {
                 });
 
                 test("the player must have started a story", async () => {
-                    const rejection = expect(repairStory.repairStory(game.id, "user-id", 0, "replaced")).rejects;
+                    const rejection = expect(repairTruncatedStory(game.id, "user-id", 0, "replaced")).rejects;
                     await rejection.toThrow(InvalidPlayerActivity);
                 });
 
@@ -97,7 +88,7 @@ describe("Repair a Truncated Story", () => {
                     });
 
                     test("a story must be assigned to the player for repair", async () => {
-                        const rejection = expect(repairStory.repairStory(game.id, "user-id", 0, "replaced")).rejects;
+                        const rejection = expect(repairTruncatedStory(game.id, "user-id", 0, "replaced")).rejects;
                         await rejection.toThrow(InvalidPlayerActivity);
                     });
 
@@ -109,24 +100,21 @@ describe("Repair a Truncated Story", () => {
                         });
 
                         test("the storyIndex must be the assigned story to repair", async () => {
-                            const rejection = expect(
-                                repairStory.repairStory(game.id, "user-id", 2, "replaced")
-                            ).rejects;
+                            const rejection = expect(repairTruncatedStory(game.id, "user-id", 2, "replaced")).rejects;
                             await rejection.toThrow(InvalidPlayerActivity);
                         });
 
                         contract("replacement", (name) => {
                             isRequired(name, () => {
-                                // @ts-ignore
-                                return repairStory.repairStory(game.id, "user-id", 1);
+                                return repairTruncatedStory(game.id, "user-id", 1);
                             });
                             mustBeString(name, (nonString) => {
-                                return repairStory.repairStory(game.id, "user-id", 1, nonString);
+                                return repairTruncatedStory(game.id, "user-id", 1, nonString);
                             });
                         });
 
                         test("the player is redacting a story", async () => {
-                            await repairStory.repairStory(game.id, "user-id", 1, "replaced");
+                            await repairTruncatedStory(game.id, "user-id", 1, "replaced");
                             const savedGame = (await games.get(game.id)) || fail("failed to get game.");
                             expect(savedGame.playerActivity("user-id")).toEqual(
                                 PlayerActivity.RedactingStory(2, "content four")
@@ -134,12 +122,10 @@ describe("Repair a Truncated Story", () => {
                         });
 
                         test("the story is awaiting a continuation from the next player", async () => {
-                            await repairStory.repairStory(game.id, "user-id", 1, "replaced");
+                            await repairTruncatedStory(game.id, "user-id", 1, "replaced");
                             const savedGame = (await games.get(game.id)) || fail("failed to get game.");
                             expect(savedGame.actionRequiredInStory(1)).toEqual(StoryStatus.Continue.action);
                             expect(savedGame.playerAssignedToStory(1)).toEqual("player-2");
-
-                            //("player-2", "content replaced")
                         });
 
                         describe("the player already redacted the other story", () => {
@@ -148,7 +134,7 @@ describe("Repair a Truncated Story", () => {
                             });
 
                             test("the player is awaiting a story", async () => {
-                                await repairStory.repairStory(game.id, "user-id", 1, "replaced");
+                                await repairTruncatedStory(game.id, "user-id", 1, "replaced");
                                 const savedGame = (await games.get(game.id)) || fail("failed to get game.");
                                 expect(savedGame.playerActivity("user-id")).toEqual(PlayerActivity.AwaitingStory);
                             });
@@ -170,11 +156,15 @@ describe("Repair a Truncated Story", () => {
                 });
 
                 test("the story is completed", async () => {
-                    await repairStory.repairStory(game.id, "user-id", 1, "replaced");
+                    await repairTruncatedStory(game.id, "user-id", 1, "replaced");
                     const savedGame = (await games.get(game.id)) || fail("failed to get game.");
                     expect(savedGame.actionRequiredInStory(1)).toEqual(StoryStatus.Completed.action);
                 });
             });
         });
     });
+});
+
+const repairTruncatedStory = require("../../../doubles/usecases").make.repairTruncatedStory({
+    games: () => games,
 });

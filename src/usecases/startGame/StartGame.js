@@ -1,4 +1,6 @@
 const { UserNotInGame } = require("../../entities/Game.Exceptions");
+const { PlayerActivity } = require("../../entities/Game.PlayerActivity");
+const { emitGameUpdate } = require("../abstractUseCases/GameUpdateEmitter");
 const { PlayerInGameUpdatesGameUseCase } = require("../abstractUseCases/PlayerInGameUpdatesGameUseCase");
 const { PlayerActivityChanged } = require("../applicationEvents");
 const { NotEnoughPlayersToStartGame } = require("./validation");
@@ -8,15 +10,18 @@ const { NotEnoughPlayersToStartGame } = require("./validation");
  */
 
 class StartGame extends PlayerInGameUpdatesGameUseCase {
+    #subscribedPlayers;
     #playerNotifier;
 
     /**
      *
      * @param {import("../../repositories/GameRepository").UpdateGameRepository} gameRepository
+     * @param {import("../../repositories/SubscribedPlayerRepository").ReadOnlySubscribedPlayerRepository} subscribedPlayers
      * @param {import("../../repositories/PlayerNotifier").PlayerNotifier} playerNotifier
      */
-    constructor(gameRepository, playerNotifier) {
+    constructor(gameRepository, subscribedPlayers, playerNotifier) {
         super(gameRepository);
+        this.#subscribedPlayers = subscribedPlayers;
         this.#playerNotifier = playerNotifier;
     }
 
@@ -37,21 +42,7 @@ class StartGame extends PlayerInGameUpdatesGameUseCase {
         if (game.playerIds.length < 4) throw new NotEnoughPlayersToStartGame(game.id, game.playerIds.length);
         game.start(maxEntries);
         this._saveUpdate(game);
-        await this.#notifyPlayers(game);
-    }
-
-    /**
-     *
-     * @param {Game<string>} game
-     */
-    async #notifyPlayers(game) {
-        const gameId = game.id;
-        const emissions = game.playerIds.map((userId) => {
-            const activity = game.playerActivity(userId);
-            if (activity === undefined) throw "Activity for user in game is undefined.";
-            this.#playerNotifier.notifyPlayer(userId, new PlayerActivityChanged(gameId, userId, activity));
-        });
-        await Promise.allSettled(emissions);
+        emitGameUpdate(game, playerId, this.#subscribedPlayers, this.#playerNotifier);
     }
 }
 

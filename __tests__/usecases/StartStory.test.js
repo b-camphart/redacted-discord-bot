@@ -1,5 +1,7 @@
 const { makeGame } = require("../../doubles/entities/makeGame");
 const { FakeGameRepository } = require("../../doubles/repositories/FakeGameRepository");
+const { DumbPlayerNotifier } = require("../../doubles/repositories/PlayerNotifierDoubles");
+const { DumbSubscribedPlayerRepository } = require("../../doubles/repositories/SubscribedPlayerRepositoryDoubles");
 const { InvalidPlayerActivity, UserNotInGame } = require("../../src/entities/Game.Exceptions");
 const { PlayerActivity } = require("../../src/entities/Game.PlayerActivity");
 const { StoryStatus } = require("../../src/entities/Game.Story.Status");
@@ -141,7 +143,7 @@ describe("Start Story", () => {
 
                     describe("when the previous player starts their story in the game", () => {
                         beforeEach(async () => {
-                            await new StartStory(gameRepository).startStory(game.id, "player-1", "content 1");
+                            await makeStartStory(gameRepository).startStory(game.id, "player-1", "content 1");
                         });
 
                         test("the player is redacting the other player's story", async () => {
@@ -188,7 +190,7 @@ describe("Start Story", () => {
  * @returns {StartStory}
  */
 const makeStartStory = (gameRepository = new FakeGameRepository()) => {
-    return new StartStory(gameRepository);
+    return new StartStory(gameRepository, new DumbSubscribedPlayerRepository(), new DumbPlayerNotifier());
 };
 
 exports.makeStartStory = makeStartStory;

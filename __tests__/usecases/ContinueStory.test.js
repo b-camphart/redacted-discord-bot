@@ -95,14 +95,6 @@ describe("given the game exists", () => {
     });
 });
 
-/**
- *
- * @param {any} [gameId]
- * @param {any} [playerId]
- * @param {any} [storyIndex]
- * @param {any} [content]
- */
-function continueStory(gameId, playerId, storyIndex, content) {
-    const usecase = new ContinueStory(games);
-    return usecase.continueStory(gameId, playerId, storyIndex, content);
-}
+const continueStory = require("../../doubles/usecases").make.continueStory({
+    games: () => games,
+});

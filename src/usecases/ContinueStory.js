@@ -1,13 +1,22 @@
 const { param } = require("../validation");
+const { emitGameUpdate } = require("./abstractUseCases/GameUpdateEmitter");
 const { PlayerInGameUpdatesStoryUseCase } = require("./abstractUseCases/PlayerInGameUpdatesStoryUseCase");
 
 class ContinueStory extends PlayerInGameUpdatesStoryUseCase {
+    #subscribedPlayers;
+    #playerNotifier;
     /**
      *
      * @param {import("../repositories/GameRepository").UpdateGameRepository} games
+     * @param {import("../repositories/SubscribedPlayerRepository").ReadOnlySubscribedPlayerRepository} subscribedPlayers
+     * @param {import("../repositories/PlayerNotifier").PlayerNotifier} playerNotifier
      */
-    constructor(games) {
+    constructor(games, subscribedPlayers, playerNotifier) {
         super(games);
+        param("subscribedPlayers", subscribedPlayers).isRequired();
+        param("playerNotifier", playerNotifier).isRequired();
+        this.#subscribedPlayers = subscribedPlayers;
+        this.#playerNotifier = playerNotifier;
     }
     /**
      *
@@ -21,6 +30,7 @@ class ContinueStory extends PlayerInGameUpdatesStoryUseCase {
         const game = await this._getGameOrThrow(gameId);
         game.continueStory(playerId, storyIndex, content);
         this._saveUpdate(game);
+        await emitGameUpdate(game, playerId, this.#subscribedPlayers, this.#playerNotifier);
     }
 
     /**

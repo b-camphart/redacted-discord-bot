@@ -21,7 +21,7 @@ exports.DumbPlayerNotifier = class DumbPlayerNotifier {
 exports.PlayerNotifierSpy = class PlayerNotifierSpy {
     constructor() {
         /**
-         * @type {any[]}
+         * @type {{userId: string, notification: any }[]}
          */
         this.playersNotified = [];
     }
