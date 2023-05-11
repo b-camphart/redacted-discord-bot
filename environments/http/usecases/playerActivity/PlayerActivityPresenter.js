@@ -149,7 +149,7 @@ exports.PlayerActivityPresenter = class PlayerActivityPresenter {
      * @returns {PlayerActivityViewModel}
      */
     continuingStory(content) {
-        return new ContinuingStoryViewModel(this.gameId, content, {
+        return new ContinuingStoryViewModel(this.gameId, content, PlayerActivityPresenter.MAX_ENTRY_LENGTH, {
             continue: "Continue",
             done: "Done",
         });

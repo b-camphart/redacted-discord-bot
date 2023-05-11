@@ -163,7 +163,8 @@ exports.PlayerActivityView = class PlayerActivityView {
             return this.#getGameMainContentTemplate("continuingStory", "index.html")
                 .setVariable("locale\\.continue", viewModel.locale.continue)
                 .setVariable("locale\\.done", viewModel.locale.done)
-                .setVariable("content", viewModel.content).template;
+                .setVariable("content", viewModel.content)
+                .setVariable("maxlength", viewModel.maxlength.toString()).template;
         });
     }
 

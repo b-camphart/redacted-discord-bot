@@ -9,6 +9,7 @@ test("valid view model is generated", () => {
     );
     expect(viewModel.gameId).toBe("game-18");
     expect(viewModel).toHaveProperty("content", "The initial content of the third story.");
+    expect(viewModel).toHaveProperty("maxlength", PlayerActivityPresenter.MAX_ENTRY_LENGTH);
     expect(viewModel).toHaveProperty("locale", {
         continue: "Continue",
         done: "Done",

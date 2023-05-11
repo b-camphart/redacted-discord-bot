@@ -40,4 +40,8 @@ test("valid view model is generated", () => {
         .view(new PlayerActivityView());
 
     expect(view).not.toHaveLength(0);
+    const matches = RegExp("{{.*}}").exec(view);
+    if (!(matches === undefined || matches === null)) {
+        throw new Error("Found non-replaced bindings.:::\n" + matches.join("\n"));
+    }
 });

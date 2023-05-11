@@ -123,11 +123,13 @@ class ContinuingStoryViewModel extends PlayerActivityViewModel {
      *
      * @param {string} gameId
      * @param {string} content
+     * @param {number} maxlength
      * @param {{ continue: string, done: string }} locale
      */
-    constructor(gameId, content, locale) {
+    constructor(gameId, content, maxlength, locale) {
         super(gameId);
         this.content = content;
+        this.maxlength = maxlength;
         this.locale = locale;
     }
 
