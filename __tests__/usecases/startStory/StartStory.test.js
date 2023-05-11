@@ -1,15 +1,15 @@
-const { makeGame } = require("../../doubles/entities/makeGame");
-const { FakeGameRepository } = require("../../doubles/repositories/FakeGameRepository");
-const { DumbPlayerNotifier } = require("../../doubles/repositories/PlayerNotifierDoubles");
-const { DumbSubscribedPlayerRepository } = require("../../doubles/repositories/SubscribedPlayerRepositoryDoubles");
-const { InvalidPlayerActivity, UserNotInGame } = require("../../src/entities/Game.Exceptions");
-const { PlayerActivity } = require("../../src/entities/Game.PlayerActivity");
-const { StoryStatus } = require("../../src/entities/Game.Story.Status");
-const { GameNotFound } = require("../../src/repositories/GameRepositoryExceptions");
-const { StartStory } = require("../../src/usecases/StartStory");
-const { OutOfRange } = require("../../src/validation/numbers");
-const { MustNotBeBlank } = require("../../src/validation/strings");
-const { contract, isRequired, mustBeString } = require("../contracts");
+const { makeGame } = require("../../../doubles/entities/makeGame");
+const { FakeGameRepository } = require("../../../doubles/repositories/FakeGameRepository");
+const { DumbPlayerNotifier } = require("../../../doubles/repositories/PlayerNotifierDoubles");
+const { DumbSubscribedPlayerRepository } = require("../../../doubles/repositories/SubscribedPlayerRepositoryDoubles");
+const { InvalidPlayerActivity, UserNotInGame } = require("../../../src/entities/Game.Exceptions");
+const { PlayerActivity } = require("../../../src/entities/Game.PlayerActivity");
+const { StoryStatus } = require("../../../src/entities/Game.Story.Status");
+const { GameNotFound } = require("../../../src/repositories/GameRepositoryExceptions");
+const { StartStory } = require("../../../src/usecases/StartStory");
+const { OutOfRange } = require("../../../src/validation/numbers");
+const { MustNotBeBlank } = require("../../../src/validation/strings");
+const { contract, isRequired, mustBeString } = require("../../contracts");
 
 describe("Start Story", () => {
     /** @type {StartStory} */
@@ -74,7 +74,7 @@ describe("Start Story", () => {
     });
 
     describe("given the game exists", () => {
-        /** @type {import("../../src/entities/types").GameWithId} */
+        /** @type {import("../../../src/entities/types").GameWithId} */
         let game;
         /**
          *
@@ -186,7 +186,7 @@ describe("Start Story", () => {
 
 /**
  *
- * @param {import("../../src/repositories/GameRepository").UpdateGameRepository} gameRepository
+ * @param {import("../../../src/repositories/GameRepository").UpdateGameRepository} gameRepository
  * @returns {StartStory}
  */
 const makeStartStory = (gameRepository = new FakeGameRepository()) => {

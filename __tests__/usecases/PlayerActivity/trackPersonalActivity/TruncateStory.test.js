@@ -6,6 +6,7 @@ const {
 } = require("../../../../doubles/repositories/SubscribedPlayerRepositoryDoubles");
 const { PlayerActivity } = require("../../../../src/entities/Game.PlayerActivity");
 const { repeat } = require("../../../../src/utils/iteration");
+const { range } = require("../../../../src/utils/range");
 
 /** @type {FakeGameRepository} */
 let games;
@@ -68,7 +69,9 @@ describe("given other stories are available", () => {
                 notification: {
                     gameId: game.id,
                     playerId: "player-1",
-                    activity: PlayerActivity.RepairingCensoredStory(0, "Player 3's _______ story content", [[11, 18]]),
+                    activity: PlayerActivity.RepairingCensoredStory(0, "Player 3's _______ story content", [
+                        range(11, 18),
+                    ]),
                 },
             });
         });

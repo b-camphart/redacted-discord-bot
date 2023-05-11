@@ -1,32 +1,55 @@
+const { Range } = require("../utils/range");
 const { censorableWords } = require("./Words");
+/** @typedef {import("./types").PlayerActivity} PlayerActivity */
 
-class PlayerActivity {
+class AwaitingGameStart {
     /**
-     *
-     * @param {string} name
+     * @template T
+     * @param {import("./types").PlayerActivityVisitor<T>} visitor
      */
-    constructor(name) {
-        this.name = name;
-    }
-
-    /**
-     *
-     * @param {PlayerActivity} other
-     */
-    isSameActivityAs(other) {
-        if (!(other instanceof PlayerActivity)) return false;
-        return this.name === other.name;
+    accept(visitor) {
+        return visitor.awaitingGameStart();
     }
 }
 
-class ReadingFinishedStories extends PlayerActivity {
+class AwaitingStory {
+    /**
+     * @template T
+     * @param {import("./types").PlayerActivityVisitor<T>} visitor
+     */
+    accept(visitor) {
+        return visitor.awaitingStory();
+    }
+}
+
+class StartingStory {
+    /**
+     * @template T
+     * @param {import("./types").PlayerActivityVisitor<T>} visitor
+     */
+    accept(visitor) {
+        return visitor.startingStory();
+    }
+}
+
+/**
+ * @implements {PlayerActivity}
+ */
+class ReadingFinishedStories {
     /**
      *
      * @param {FinishedStory[]} stories
      */
     constructor(stories) {
-        super("reading-finished-stories");
         this.stories = stories;
+    }
+
+    /**
+     * @template T
+     * @param {import("./types").PlayerActivityVisitor<T>} visitor
+     */
+    accept(visitor) {
+        return visitor.readingFinishedStories(this.stories);
     }
 
     /**
@@ -36,20 +59,17 @@ class ReadingFinishedStories extends PlayerActivity {
      */
     isSameActivityAs(other) {
         if (!(other instanceof ReadingFinishedStories)) return false;
-        if (!super.isSameActivityAs(other)) return false;
         if (this.stories !== other.stories) return false;
         return true;
     }
 }
 
-class ActivityInStory extends PlayerActivity {
+class ActivityInStory {
     /**
      *
-     * @param {string} name
      * @param {number} storyIndex
      */
-    constructor(name, storyIndex) {
-        super(name);
+    constructor(storyIndex) {
         this.storyIndex = storyIndex;
     }
 
@@ -60,12 +80,14 @@ class ActivityInStory extends PlayerActivity {
      */
     isSameActivityAs(other) {
         if (!(other instanceof ActivityInStory)) return false;
-        if (!super.isSameActivityAs(other)) return false;
         if (this.storyIndex !== other.storyIndex) return false;
         return true;
     }
 }
 
+/**
+ * @implements {PlayerActivity}
+ */
 class RedactingStory extends ActivityInStory {
     /**
      *
@@ -73,9 +95,17 @@ class RedactingStory extends ActivityInStory {
      * @param {string} entryContent
      */
     constructor(storyIndex, entryContent) {
-        super("redacting-story", storyIndex);
+        super(storyIndex);
         this.entryContent = entryContent;
         this.wordBoundaries = censorableWords(entryContent);
+    }
+
+    /**
+     * @template T
+     * @param {import("./types").PlayerActivityVisitor<T>} visitor
+     */
+    accept(visitor) {
+        return visitor.redactingStory(this.entryContent, this.wordBoundaries, this.storyIndex);
     }
 
     /**
@@ -91,41 +121,28 @@ class RedactingStory extends ActivityInStory {
     }
 }
 
-class RepairingStory extends ActivityInStory {
-    /**
-     *
-     * @param {string} fullName
-     * @param {number} storyIndex
-     * @param {string} censoredContent
-     */
-    constructor(fullName, storyIndex, censoredContent) {
-        super(fullName, storyIndex);
-        this.censoredContent = censoredContent;
-    }
-
-    /**
-     *
-     * @param {PlayerActivity} other
-     * @returns {other is RepairingStory}
-     */
-    isSameActivityAs(other) {
-        if (!(other instanceof RepairingStory)) return false;
-        if (!super.isSameActivityAs(other)) return false;
-        if (this.censoredContent != other.censoredContent) return false;
-        return true;
-    }
-}
-
-class RepairingCensoredStory extends RepairingStory {
+/**
+ * @implements {PlayerActivity}
+ */
+class RepairingCensoredStory extends ActivityInStory {
     /**
      *
      * @param {number} storyIndex
      * @param {string} censoredContent
-     * @param {[number, number][]} censors
+     * @param {Range[]} censors
      */
     constructor(storyIndex, censoredContent, censors) {
-        super("repairing-censored-story", storyIndex, censoredContent);
+        super(storyIndex);
+        this.content = censoredContent;
         this.censors = censors;
+    }
+
+    /**
+     * @template T
+     * @param {import("./types").PlayerActivityVisitor<T>} visitor
+     */
+    accept(visitor) {
+        return visitor.repairingCensor(this.content, this.censors, this.storyIndex);
     }
 
     /**
@@ -141,7 +158,10 @@ class RepairingCensoredStory extends RepairingStory {
     }
 }
 
-class RepairingTruncatedStory extends RepairingStory {
+/**
+ * @implements {PlayerActivity}
+ */
+class RepairingTruncatedStory extends ActivityInStory {
     /**
      *
      * @param {number} storyIndex
@@ -149,8 +169,17 @@ class RepairingTruncatedStory extends RepairingStory {
      * @param {number} truncationIndex
      */
     constructor(storyIndex, censoredContent, truncationIndex) {
-        super("repairing-censored-story", storyIndex, censoredContent);
+        super(storyIndex);
+        this.content = censoredContent;
         this.truncationIndex = truncationIndex;
+    }
+
+    /**
+     * @template T
+     * @param {import("./types").PlayerActivityVisitor<T>} visitor
+     */
+    accept(visitor) {
+        return visitor.repairingTruncation(this.content, this.truncationIndex, this.storyIndex);
     }
 
     /**
@@ -166,6 +195,9 @@ class RepairingTruncatedStory extends RepairingStory {
     }
 }
 
+/**
+ * @implements {PlayerActivity}
+ */
 class ContinuingStory extends ActivityInStory {
     /**
      *
@@ -173,8 +205,16 @@ class ContinuingStory extends ActivityInStory {
      * @param {string} repairedContent
      */
     constructor(storyIndex, repairedContent) {
-        super("continuing-story", storyIndex);
+        super(storyIndex);
         this.repairedContent = repairedContent;
+    }
+
+    /**
+     * @template T
+     * @param {import("./types").PlayerActivityVisitor<T>} visitor
+     */
+    accept(visitor) {
+        return visitor.continuingStory(this.repairedContent, this.storyIndex);
     }
 
     /**
@@ -190,19 +230,10 @@ class ContinuingStory extends ActivityInStory {
     }
 }
 
-/** @typedef {FinishedStoryEntry[]} FinishedStory */
-
-/**
- * @typedef {Object} FinishedStoryEntry
- * @prop {string} content
- * @prop {[number, number][]} censors
- * @prop {string[]} contributors
- */
-
 exports.PlayerActivity = Object.freeze({
-    AwaitingStart: Object.freeze(new PlayerActivity("awaiting-start")),
-    StartingStory: Object.freeze(new PlayerActivity("starting-story")),
-    AwaitingStory: Object.freeze(new PlayerActivity("awaiting-story")),
+    AwaitingStart: Object.freeze(new AwaitingGameStart()),
+    StartingStory: Object.freeze(new StartingStory()),
+    AwaitingStory: Object.freeze(new AwaitingStory()),
     /**
      *
      * @param {number} storyIndex
@@ -215,7 +246,7 @@ exports.PlayerActivity = Object.freeze({
      *
      * @param {number} storyIndex
      * @param {string} censoredContent
-     * @param {[number, number][]} censors
+     * @param {Range[]} censors
      */
     RepairingCensoredStory: (storyIndex, censoredContent, censors) => {
         return Object.freeze(new RepairingCensoredStory(storyIndex, censoredContent, censors));
@@ -241,7 +272,7 @@ exports.PlayerActivity = Object.freeze({
 
     /**
      *
-     * @param {FinishedStory[]} stories
+     * @param {import("./types").FinishedStory[]} stories
      * @returns
      */
     ReadingFinishedStories: (stories) => {

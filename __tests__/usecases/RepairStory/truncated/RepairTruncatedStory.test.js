@@ -1,11 +1,11 @@
-const { makeGame } = require("../../../doubles/entities/makeGame");
-const { FakeGameRepository } = require("../../../doubles/repositories/FakeGameRepository");
-const { UserNotInGame, InvalidPlayerActivity } = require("../../../src/entities/Game.Exceptions");
-const { PlayerActivity } = require("../../../src/entities/Game.PlayerActivity");
-const { StoryStatus } = require("../../../src/entities/Game.Story.Status");
-const { GameNotFound } = require("../../../src/repositories/GameRepositoryExceptions");
-const { RepairStory } = require("../../../src/usecases/RepairStory");
-const { contract, isRequired, mustBeString, mustBeNumber } = require("../../contracts");
+const { makeGame } = require("../../../../doubles/entities/makeGame");
+const { FakeGameRepository } = require("../../../../doubles/repositories/FakeGameRepository");
+const { UserNotInGame, InvalidPlayerActivity } = require("../../../../src/entities/Game.Exceptions");
+const { PlayerActivity } = require("../../../../src/entities/Game.PlayerActivity");
+const { StoryStatus } = require("../../../../src/entities/Game.Story.Status");
+const { GameNotFound } = require("../../../../src/repositories/GameRepositoryExceptions");
+const { RepairStory } = require("../../../../src/usecases/RepairStory");
+const { contract, isRequired, mustBeString, mustBeNumber } = require("../../../contracts");
 
 /** @type {FakeGameRepository} */
 let games;
@@ -48,7 +48,7 @@ describe("Repair a Truncated Story", () => {
     });
 
     describe("given the game exists", () => {
-        /** @type {import("../../../src/entities/types").Game<string>} */
+        /** @type {import("../../../../src/entities/types").Game<string>} */
         let game;
         beforeEach(async () => {
             game = await games.add(makeGame());
@@ -165,6 +165,6 @@ describe("Repair a Truncated Story", () => {
     });
 });
 
-const repairTruncatedStory = require("../../../doubles/usecases").make.repairTruncatedStory({
+const repairTruncatedStory = require("../../../../doubles/usecases").make.repairTruncatedStory({
     games: () => games,
 });

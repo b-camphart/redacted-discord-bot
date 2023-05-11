@@ -1,5 +1,6 @@
 const { IndexOutOfBounds } = require("../usecases/validation");
 const { repeat } = require("../utils/iteration");
+const { Range, range, inclusive, exclusive } = require("../utils/range");
 const { param } = require("../validation");
 const { eachValueOf, mustHaveLength } = require("../validation/arrays");
 const { mustBeLessThan } = require("../validation/numbers");
@@ -9,7 +10,7 @@ const { censorableWords } = require("./Words");
  * @typedef {object} StoryEntrySnapshot
  * @prop {string} initialContent
  * @prop {string[]} contributors
- * @prop {[number, number][] | [number, number]} [censors]
+ * @prop {Range[] | Range} [censors]
  * @prop {string} [finalContent]
  */
 
@@ -38,7 +39,7 @@ class StoryEntry {
      *
      * @param {string} initialContent
      * @param {string[]} contributors
-     * @param {[number, number][] | [number, number]} [censors]
+     * @param {Range[] | Range} [censors]
      * @param {string} [finalContent]
      */
     constructor(initialContent, contributors, censors, finalContent) {
@@ -73,7 +74,7 @@ class StoryEntry {
         const censors = this.#getCensoredWordBoundaries(wordIndices, wordBoundaries);
         const censoredContent = this.#censorInitialContent(censors);
 
-        if (!Array.isArray(censors) || censors.length === 0 || !Array.isArray(censors[0])) {
+        if (!Array.isArray(censors) || censors.length === 0 || !(censors[0] instanceof Range)) {
             const report =
                 "  Content: " +
                 this.initialContent +
@@ -81,7 +82,7 @@ class StoryEntry {
                 JSON.stringify(wordBoundaries) +
                 "\n  wordIndices: " +
                 JSON.stringify(wordIndices);
-            throw `Censors should be an array of arrays.  Found: <${JSON.stringify(censors)}>\n` + report;
+            throw `Censors should be an array of ranges.  Found: <${JSON.stringify(censors)}>\n` + report;
         }
 
         this.censors = censors;
@@ -93,7 +94,7 @@ class StoryEntry {
     /**
      *
      * @param {number[]} wordIndices
-     * @param {[number, number][]} wordBoundaries
+     * @param {Range[]} wordBoundaries
      * @returns
      */
     #getCensoredWordBoundaries(wordIndices, wordBoundaries) {
@@ -108,14 +109,14 @@ class StoryEntry {
 
     /**
      *
-     * @param {[number, number][]} censors
+     * @param {Range[]} censors
      * @returns
      */
     #censorInitialContent(censors) {
         return censors.reduce((content, boundary) => {
             let censor = "";
-            repeat(boundary[1] - boundary[0], () => (censor += "_"));
-            return content.substring(0, boundary[0]) + censor + content.substring(boundary[1]);
+            repeat(boundary.size, () => (censor += "_"));
+            return content.substring(0, boundary.start) + censor + content.substring(boundary.endExclusive);
         }, this.initialContent);
     }
 
@@ -130,12 +131,12 @@ class StoryEntry {
         const wordBoundaries = censorableWords(this.initialContent);
         mustBeLessThan(param("truncationCount", truncationCount).mustBeNumber(), wordBoundaries.length);
 
-        const truncateFrom = wordBoundaries.at(-truncationCount)?.at(0);
+        const truncateFrom = wordBoundaries.at(-truncationCount)?.start;
         if (truncateFrom === undefined)
             throw `Illegal state.  Word boundaries does not have element at index ${-truncationCount}`;
         const censoredContent = this.#truncateInitialContent(truncateFrom);
 
-        this.censors = /** @type {[number, number]} */ ([truncateFrom, censoredContent.length]);
+        this.censors = range(inclusive(truncateFrom), exclusive(censoredContent.length));
         this.contributors.push(playerId);
 
         return { censoredContent, truncateFrom };
@@ -160,15 +161,13 @@ class StoryEntry {
         const censors = this.#getCensorBoundariesOrThrow();
 
         let repairedContent;
-        const expectingTruncation =
-            censors.length === 2 && typeof censors[0] === "number" && typeof censors[1] === "number";
-        if (expectingTruncation) {
-            repairedContent = this.#repairTruncation(replacement, /** @type {[number, number]} */ (censors));
+        if (!Array.isArray(censors)) {
+            repairedContent = this.#repairTruncation(replacement, censors);
         } else {
-            if (!Array.isArray(censors) || censors.length === 0 || !Array.isArray(censors[0])) {
-                throw `Censors should be an array of arrays.  Found: <${JSON.stringify(censors)}>`;
+            if (censors.length === 0 || !(censors[0] instanceof Range)) {
+                throw `Censors should be an array of ranges.  Found: <${JSON.stringify(censors)}>`;
             }
-            repairedContent = this.#repairCensor(replacement, /** @type {[Number, number][]} */ (censors));
+            repairedContent = this.#repairCensor(replacement, censors);
         }
 
         if (repairedContent === undefined) {
@@ -184,7 +183,7 @@ class StoryEntry {
     /**
      *
      * @param {string | string[]} replacements
-     * @param {[number, number][]} censors
+     * @param {Range[]} censors
      * @returns
      */
     #repairCensor(replacements, censors) {
@@ -197,17 +196,20 @@ class StoryEntry {
             .reverse()
             .reduce((content, boundary, index) => {
                 return (
-                    content.substring(0, boundary[0]) +
+                    content.substring(0, boundary.start) +
                     replacements[censors.length - 1 - index] +
-                    content.substring(boundary[1])
+                    content.substring(boundary.endExclusive)
                 );
             }, this.initialContent);
 
         censors.reduce((offset, boundary, index) => {
             const currentReplacement = replacements[index];
-            censors[index] = [boundary[0] + offset, boundary[0] + offset + currentReplacement.length];
+            censors[index] = range(
+                inclusive(boundary.start + offset),
+                exclusive(boundary.start + offset + currentReplacement.length)
+            );
 
-            return offset + (currentReplacement.length - (boundary[1] - boundary[0]));
+            return offset + (currentReplacement.length - boundary.size);
         }, 0);
         return repairedContent;
     }
@@ -215,14 +217,14 @@ class StoryEntry {
     /**
      *
      * @param {string | string[]} replacement
-     * @param {[number, number]} censors
+     * @param {Range} truncatedRange
      * @returns
      */
-    #repairTruncation(replacement, censors) {
+    #repairTruncation(replacement, truncatedRange) {
         replacement = param("replacement", replacement).isRequired().mustBeString().value;
-        const repairedContent = this.initialContent.substring(0, censors[0]) + replacement;
+        const repairedContent = this.initialContent.substring(0, truncatedRange.start) + replacement;
 
-        censors[1] = repairedContent.length;
+        truncatedRange.endExclusive = repairedContent.length;
         return repairedContent;
     }
 
@@ -240,9 +242,7 @@ class StoryEntry {
         if (this.censors === undefined) throw "Entry not yet finished.";
         return {
             content: this.finalContent,
-            censors: /** @type {[number, number][]} */ (
-                typeof this.censors[0] === "number" ? [this.censors] : this.censors
-            ),
+            censors: Array.isArray(this.censors) ? this.censors : [this.censors],
             contributors: this.contributors,
         };
     }

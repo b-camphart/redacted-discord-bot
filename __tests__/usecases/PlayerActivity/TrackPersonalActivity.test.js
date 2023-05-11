@@ -5,6 +5,7 @@ const { FakeSubscribedPlayerRepository } = require("../../../doubles/repositorie
 const { PlayerActivity } = require("../../../src/entities/Game.PlayerActivity");
 const { PlayerActivityService } = require("../../../src/usecases/PlayerActivityService");
 const { repeat } = require("../../../src/utils/iteration");
+const { range } = require("../../../src/utils/range");
 const { expectActionToThrowGameNotFound, expectActionToThrowUserNotInGame } = require("../expectErrors");
 
 /** @type {import("../../../src/repositories/GameRepository").GameRepository} */
@@ -120,7 +121,7 @@ describe("given the game has been created", () => {
                     expectPlayerToHaveBeenNotifiedOfActivityChange(
                         "player-1",
                         game.id,
-                        PlayerActivity.RepairingCensoredStory(1, "Player 3's _______ story content.", [[11, 18]])
+                        PlayerActivity.RepairingCensoredStory(1, "Player 3's _______ story content.", [range(11, 18)])
                     );
                 });
                 test("player is not notified when a censored story is not assigned to them", async () => {

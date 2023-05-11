@@ -5,6 +5,7 @@ const { PlayerActivity } = require("../../../src/entities/Game.PlayerActivity");
 const { StoryStatus } = require("../../../src/entities/Game.Story.Status");
 const { GameNotFound } = require("../../../src/repositories/GameRepositoryExceptions");
 const { IndexOutOfBounds } = require("../../../src/usecases/validation");
+const { range } = require("../../../src/utils/range");
 const { OutOfRange } = require("../../../src/validation/numbers");
 const { isRequired, mustBeString, contract, mustBeNumber } = require("../../contracts");
 
@@ -146,7 +147,7 @@ describe("given the game exists", () => {
                     await censorStory(game.id, "user-id", 0, [2, 4, 6]);
                     const savedGame = (await games.get(game.id)) || fail("game was removed from repo");
                     expect(savedGame.playerActivity("user-id")).toEqual(
-                        PlayerActivity.RepairingCensoredStory(2, "_______ two", [[0, 7]])
+                        PlayerActivity.RepairingCensoredStory(2, "_______ two", [range(0, 7)])
                     );
                 });
             });
@@ -160,7 +161,7 @@ describe("given the game exists", () => {
                 test("the player is repairing a story", async () => {
                     const savedGame = (await games.get(game.id)) || fail("game was removed from repo");
                     expect(savedGame.playerActivity("user-id")).toEqual(
-                        PlayerActivity.RepairingCensoredStory(2, "_______ two", [[0, 7]])
+                        PlayerActivity.RepairingCensoredStory(2, "_______ two", [range(0, 7)])
                     );
                 });
             });

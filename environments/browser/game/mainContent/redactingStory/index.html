@@ -1,0 +1,15 @@
+<h1>{{locale.redact}}</h1>
+<p class="content censor">{{content}}</p>
+<ul>
+    <li>
+        <button disabled aria-disabled="true" data-awaiting-page-load onclick="onToggleCensor">
+            {{locale.censor}}
+        </button>
+    </li>
+    <li>
+        <button disabled aria-disabled="true" data-awaiting-page-load onclick="onToggleTruncate">
+            {{locale.truncate}}
+        </button>
+    </li>
+</ul>
+<button disabled aria-disabled="true" data-awaiting-page-load onclick="onFinishRedaction">{{locale.done}}</button>

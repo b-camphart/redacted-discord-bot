@@ -3,6 +3,7 @@
 // return value should look something like: [[number, number]]
 
 const { censorableWords } = require("../../../src/entities/Words");
+const { exclusive, inclusive, range } = require("../../../src/utils/range");
 
 test("no censorable words", () => {
     expect(censorableWords("")).toEqual([]);
@@ -48,12 +49,12 @@ const censoredIndices = (censoredContent) => {
     for (let charIndex = 0; charIndex < censoredContent.length; charIndex++) {
         const char = censoredContent.charAt(charIndex);
         if (char !== "_") {
-            if (censorStart >= 0) censors.push([censorStart, charIndex]);
+            if (censorStart >= 0) censors.push(range(inclusive(censorStart), exclusive(charIndex)));
             censorStart = -1;
             continue;
         }
         if (censorStart < 0) censorStart = charIndex;
     }
-    if (censorStart >= 0) censors.push([censorStart, censoredContent.length]);
+    if (censorStart >= 0) censors.push(range(inclusive(censorStart), exclusive(censoredContent.length)));
     return censors;
 };

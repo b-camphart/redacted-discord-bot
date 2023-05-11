@@ -1,12 +1,11 @@
-const { makeGame } = require("../../doubles/entities/makeGame");
-const { FakeGameRepository } = require("../../doubles/repositories/FakeGameRepository");
-const { InvalidPlayerActivity } = require("../../src/entities/Game.Exceptions");
-const { ContinueStory } = require("../../src/usecases/ContinueStory");
-const { repeat } = require("../../src/utils/iteration");
-const { contract, isRequired, mustBeString, mustBeNumber } = require("../contracts");
-const { expectActionToThrowGameNotFound, expectActionToThrowUserNotInGame } = require("./expectErrors");
+const { makeGame } = require("../../../doubles/entities/makeGame");
+const { FakeGameRepository } = require("../../../doubles/repositories/FakeGameRepository");
+const { InvalidPlayerActivity } = require("../../../src/entities/Game.Exceptions");
+const { repeat } = require("../../../src/utils/iteration");
+const { contract, isRequired, mustBeString, mustBeNumber } = require("../../contracts");
+const { expectActionToThrowGameNotFound, expectActionToThrowUserNotInGame } = require("../expectErrors");
 
-/** @type {import("../../src/repositories/GameRepository").GameRepository} */
+/** @type {import("../../../src/repositories/GameRepository").GameRepository} */
 let games;
 beforeEach(() => {
     games = new FakeGameRepository();
@@ -53,7 +52,7 @@ test("game must exist", async () => {
 });
 
 describe("given the game exists", () => {
-    /** @type {import("../../src/entities/types").Game<string>} */
+    /** @type {import("../../../src/entities/types").Game<string>} */
     let game;
     beforeEach(async () => {
         game = await games.add(makeGame());
@@ -95,6 +94,6 @@ describe("given the game exists", () => {
     });
 });
 
-const continueStory = require("../../doubles/usecases").make.continueStory({
+const continueStory = require("../../../doubles/usecases").make.continueStory({
     games: () => games,
 });

@@ -32,10 +32,12 @@ exports.inclusive = function (num) {
 
 /**
  *
- * @param {RangeEnd} start
- * @param {RangeEnd} end
+ * @param {RangeEnd | number} start
+ * @param {RangeEnd | number} end
  */
 exports.range = (start, end) => {
+    if (typeof start === "number") start = this.inclusive(start);
+    if (typeof end === "number") end = this.exclusive(end);
     return new this.Range(start, end);
 };
 
@@ -79,5 +81,9 @@ exports.Range = class Range {
         if (this.start > num) return false;
         if (this.endExclusive <= num) return false;
         return true;
+    }
+
+    get size() {
+        return this.endExclusive - this.start;
     }
 };

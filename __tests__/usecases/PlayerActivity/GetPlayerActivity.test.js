@@ -6,6 +6,7 @@ const { expectActionToThrowGameNotFound, expectActionToThrowUserNotInGame } = re
 const { repeat } = require("../../../src/utils/iteration");
 const { getOrThrow } = require("../../../doubles/repositories/extensions");
 const { contract, isRequired, mustBeString } = require("../../contracts");
+const { range } = require("../../../src/utils/range");
 
 /** @type {PlayerActivityService} */
 let playerActivity;
@@ -123,7 +124,7 @@ describe("given the game exists", () => {
                             test("I am repairing the story", async () => {
                                 const activity = await playerActivity.getPlayerActivity(gameId, playerId);
                                 expect(activity).toEqual(
-                                    PlayerActivity.RepairingCensoredStory(2, "content _____", [[8, 13]])
+                                    PlayerActivity.RepairingCensoredStory(2, "content _____", [range(8, 13)])
                                 );
                             });
 
@@ -204,28 +205,28 @@ describe("given the game exists", () => {
                                             [
                                                 {
                                                     content: "content replacement",
-                                                    censors: [[8, 19]],
+                                                    censors: [range(8, 19)],
                                                     contributors: [playerId, "player-2", "player-3"],
                                                 },
                                             ],
                                             [
                                                 {
                                                     content: "content replacement",
-                                                    censors: [[8, 19]],
+                                                    censors: [range(8, 19)],
                                                     contributors: ["player-4", playerId, "player-2"],
                                                 },
                                             ],
                                             [
                                                 {
                                                     content: "content replacement",
-                                                    censors: [[8, 19]],
+                                                    censors: [range(8, 19)],
                                                     contributors: ["player-3", "player-4", playerId],
                                                 },
                                             ],
                                             [
                                                 {
                                                     content: "content replacement",
-                                                    censors: [[8, 19]],
+                                                    censors: [range(8, 19)],
                                                     contributors: ["player-2", "player-3", "player-4"],
                                                 },
                                             ],
