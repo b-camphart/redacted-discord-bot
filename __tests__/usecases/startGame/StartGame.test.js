@@ -1,13 +1,13 @@
-const { makeGame } = require("../../doubles/entities/makeGame");
-const { FakeGameRepository } = require("../../doubles/repositories/FakeGameRepository");
-const { PlayerNotifierSpy, DumbPlayerNotifier } = require("../../doubles/repositories/PlayerNotifierDoubles");
-const { DumbSubscribedPlayerRepository } = require("../../doubles/repositories/SubscribedPlayerRepositoryDoubles");
-const { UserNotInGame, GameAlreadyStarted } = require("../../src/entities/Game.Exceptions");
-const { PlayerActivity } = require("../../src/entities/Game.PlayerActivity");
-const { GameNotFound } = require("../../src/repositories/GameRepositoryExceptions");
-const { StartGame } = require("../../src/usecases/startGame/StartGame");
-const { NotEnoughPlayersToStartGame } = require("../../src/usecases/startGame/validation");
-const { contract, isRequired, mustBeString } = require("../contracts");
+const { makeGame } = require("../../../doubles/entities/makeGame");
+const { FakeGameRepository } = require("../../../doubles/repositories/FakeGameRepository");
+const { PlayerNotifierSpy } = require("../../../doubles/repositories/PlayerNotifierDoubles");
+const { DumbSubscribedPlayerRepository } = require("../../../doubles/repositories/SubscribedPlayerRepositoryDoubles");
+const { UserNotInGame, GameAlreadyStarted } = require("../../../src/entities/Game.Exceptions");
+const { PlayerActivity } = require("../../../src/entities/Game.PlayerActivity");
+const { GameNotFound } = require("../../../src/repositories/GameRepositoryExceptions");
+const { StartGame } = require("../../../src/usecases/startGame/StartGame");
+const { NotEnoughPlayersToStartGame } = require("../../../src/usecases/startGame/validation");
+const { contract, isRequired, mustBeString } = require("../../contracts");
 
 /** @type {FakeGameRepository} */
 let gameRepository;

@@ -9,6 +9,7 @@ const {
     ContinuingStoryViewModel,
     StartingStoryViewModel,
     ReadingFinishedStoriesViewModel,
+    StartingGameViewModel,
 } = require("./PlayerActivityViewModel");
 const { RedactingStoryView } = require("../redactStory/RedactingStoryView");
 const { RepairCensoredStoryView } = require("../repair/censoredStory/RepairCensoredStoryView");
@@ -83,6 +84,19 @@ exports.PlayerActivityView = class PlayerActivityView {
     generateEmptyGame(viewModel) {
         const template = this.#getRootGameTemplate(viewModel.gameId);
         return template.setVariable("mainContent", "").template;
+    }
+
+    /**
+     *
+     * @param {StartingGameViewModel} viewModel
+     * @returns {string}
+     */
+    generateStartingGame(viewModel) {
+        return this.#generateGameView(viewModel, () => {
+            return this.#getGameMainContentTemplate("awaitingGameStart", "index.html")
+                .setVariable("locale\\.startGame", viewModel.locale.startGame)
+                .setVariable("locale\\.waitingForGameStart", viewModel.locale.waitingForGameStart).template;
+        });
     }
 
     /**

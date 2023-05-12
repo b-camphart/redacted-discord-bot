@@ -7,6 +7,7 @@ const { repeat } = require("../../../../src/utils/iteration");
 const { Range, range } = require("../../../../src/utils/range");
 const {
     PlayerActivityViewModel,
+    StartingGameViewModel,
     RedactingStoryViewModel,
     RepairingCensoredStoryViewModel,
     RepairingTruncatedStoryViewModel,
@@ -32,7 +33,10 @@ exports.PlayerActivityPresenter = class PlayerActivityPresenter {
     }
 
     awaitingGameStart() {
-        return new PlayerActivityViewModel(this.gameId);
+        return new StartingGameViewModel(this.gameId, {
+            waitingForGameStart: "Waiting for Game to Start",
+            startGame: "Start Game",
+        });
     }
 
     awaitingStory() {

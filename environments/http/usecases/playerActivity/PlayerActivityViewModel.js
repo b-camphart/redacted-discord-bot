@@ -18,6 +18,28 @@ class PlayerActivityViewModel {
 }
 exports.PlayerActivityViewModel = PlayerActivityViewModel;
 
+class StartingGameViewModel extends PlayerActivityViewModel {
+    /**
+     *
+     * @param {string} gameId
+     * @param {{ startGame: string, waitingForGameStart: string }} locale
+     */
+    constructor(gameId, locale) {
+        super(gameId);
+        this.locale = locale;
+    }
+
+    /**
+     *
+     * @param {import("./types").PlayerActivityView} view
+     * @returns {string}
+     */
+    view(view) {
+        return view.generateStartingGame(this);
+    }
+}
+exports.StartingGameViewModel = StartingGameViewModel;
+
 class StartingStoryViewModel extends PlayerActivityViewModel {
     /**
      *
