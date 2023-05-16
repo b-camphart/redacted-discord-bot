@@ -1,11 +1,11 @@
-const { PlayerNotFound } = require("../../src/repositories/UserRepositoryExceptions");
-const { FakeUserRepository } = require("../../doubles/repositories/FakeUserRepository");
-const { makeCreateGame } = require("../../doubles/usecases/createGame/createGameFactory");
-const { User } = require("../../src/entities/User");
-const { FakeGameRepository } = require("../../doubles/repositories/FakeGameRepository");
-const { AwaitingGameStart } = require("../../src/entities/playerActivities");
-const { GameCreated } = require("../../src/usecases/createGame/GameCreated");
-const { isRequired, mustBeString, contract } = require("../contracts");
+const { PlayerNotFound } = require("../../../src/repositories/UserRepositoryExceptions");
+const { FakeUserRepository } = require("../../../doubles/repositories/FakeUserRepository");
+const { makeCreateGame } = require("../../../doubles/usecases/createGame/createGameFactory");
+const { User } = require("../../../src/entities/User");
+const { FakeGameRepository } = require("../../../doubles/repositories/FakeGameRepository");
+const { AwaitingGameStart } = require("../../../src/entities/playerActivities");
+const { GameCreated } = require("../../../src/usecases/createGame/GameCreated");
+const { isRequired, mustBeString, contract } = require("../../contracts");
 
 describe("CreateGame", () => {
 	const users = new FakeUserRepository();
