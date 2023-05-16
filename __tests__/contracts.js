@@ -6,23 +6,26 @@ const { param } = require("../src/validation");
  * @param {(name: string) => void} fn
  */
 exports.contract = (paramName, fn) => {
-    describe(paramName, () => {
-        fn(paramName);
-    });
+	describe(paramName, () => {
+		fn(paramName);
+	});
 };
 
 /**
  *
  * @param {string} paramName
- * @param {() => Promise<any>} callWithoutParam
+ * @param {(param: any) => Promise<any>} callWithoutParam
  */
 exports.isRequired = (paramName, callWithoutParam) => {
-    it("is required", async () => {
-        // @ts-ignore
-        const action = callWithoutParam();
-        await expect(action).rejects.toThrow(TypeError);
-        await expect(action).rejects.toThrow(`${paramName} is required.`);
-    });
+	describe("is required", () => {
+		[undefined, null].forEach((param) => {
+			it(`rejects ${param}`, async () => {
+				const action = callWithoutParam(param);
+				await expect(action).rejects.toThrow(ReferenceError);
+				await expect(action).rejects.toThrow(RegExp(".*required.*"));
+			});
+		});
+	});
 };
 
 /**
@@ -31,17 +34,17 @@ exports.isRequired = (paramName, callWithoutParam) => {
  * @param {(garbage: any) => Promise<any>} callWithGarbage
  */
 exports.mustBeString = (paramName, callWithGarbage) => {
-    const falseStrings = [13, [], {}, true];
-    describe("must be a string", () => {
-        falseStrings.forEach((garbage) => {
-            const garbageType = typeof garbage;
-            it(`does not accept ${garbageType}`, async () => {
-                const action = callWithGarbage(garbage);
-                await expect(action).rejects.toThrow(TypeError);
-                await expect(action).rejects.toThrow(`${paramName} must be a string.  Found: ${garbageType}`);
-            });
-        });
-    });
+	const falseStrings = [13, [], {}, true];
+	describe("must be a string", () => {
+		falseStrings.forEach((garbage) => {
+			const garbageType = typeof garbage;
+			it(`does not accept ${garbageType}`, async () => {
+				const action = callWithGarbage(garbage);
+				await expect(action).rejects.toThrow(TypeError);
+				expect(action).rejects.toThrow(RegExp(`.* must be a string\\.  Found: ${garbageType}`));
+			});
+		});
+	});
 };
 
 /**
@@ -50,16 +53,16 @@ exports.mustBeString = (paramName, callWithGarbage) => {
  * @param {(garbage: any) => Promise<any>} callWithGarbage
  */
 exports.mustBeNumber = (paramName, callWithGarbage) => {
-    const falseNumbers = ["13", [], {}, true];
-    describe("must be a number", () => {
-        falseNumbers.forEach((garbage) => {
-            it(`does not accept ${typeof garbage}`, async () => {
-                const action = callWithGarbage(garbage);
-                await expect(action).rejects.toThrow(TypeError);
-                await expect(action).rejects.toThrow(`${paramName} must be a number.`);
-            });
-        });
-    });
+	const falseNumbers = ["13", [], {}, true];
+	describe("must be a number", () => {
+		falseNumbers.forEach((garbage) => {
+			it(`does not accept ${typeof garbage}`, async () => {
+				const action = callWithGarbage(garbage);
+				await expect(action).rejects.toThrow(TypeError);
+				await expect(action).rejects.toThrow(`${paramName} must be a number.`);
+			});
+		});
+	});
 };
 
 /**
@@ -68,14 +71,14 @@ exports.mustBeNumber = (paramName, callWithGarbage) => {
  * @param {(garbage: any) => Promise<any>} callWithGarbage
  */
 exports.mustBeArray = (paramName, callWithGarbage) => {
-    const falseArrays = ["13", {}, true, 56];
-    describe("must be an array", () => {
-        falseArrays.forEach((garbage) => {
-            it(`does not accept ${typeof garbage}`, async () => {
-                const action = callWithGarbage(garbage);
-                await expect(action).rejects.toThrow(TypeError);
-                await expect(action).rejects.toThrow(`${paramName} must be an array.`);
-            });
-        });
-    });
+	const falseArrays = ["13", {}, true, 56];
+	describe("must be an array", () => {
+		falseArrays.forEach((garbage) => {
+			it(`does not accept ${typeof garbage}`, async () => {
+				const action = callWithGarbage(garbage);
+				await expect(action).rejects.toThrow(TypeError);
+				await expect(action).rejects.toThrow(`${paramName} must be an array.`);
+			});
+		});
+	});
 };
