@@ -2,9 +2,9 @@ const { makeGame } = require("../../../doubles/entities/makeGame");
 const { FakeGameRepository } = require("../../../doubles/repositories/FakeGameRepository");
 const { PlayerNotifierSpy } = require("../../../doubles/repositories/PlayerNotifierDoubles");
 const { DumbSubscribedPlayerRepository } = require("../../../doubles/repositories/SubscribedPlayerRepositoryDoubles");
-const { UserNotInGame, GameAlreadyStarted } = require("../../../src/entities/Game.Exceptions");
-const { PlayerActivity } = require("../../../src/entities/Game.PlayerActivity");
+const { UnauthorizedGameModification, InsufficientPlayers } = require("../../../src/entities/Game.Exceptions");
 const { GameNotFound } = require("../../../src/repositories/GameRepositoryExceptions");
+const { GameStarted } = require("../../../src/usecases/startGame/GameStarted");
 const { StartGame } = require("../../../src/usecases/startGame/StartGame");
 const { NotEnoughPlayersToStartGame } = require("../../../src/usecases/startGame/validation");
 const { contract, isRequired, mustBeString } = require("../../contracts");
@@ -15,102 +15,87 @@ let gameRepository;
 let playerNotifierSpy;
 
 beforeEach(() => {
-    gameRepository = new FakeGameRepository();
-    playerNotifierSpy = new PlayerNotifierSpy();
+	gameRepository = new FakeGameRepository();
+	playerNotifierSpy = new PlayerNotifierSpy();
 });
 
 describe("contract", () => {
-    contract("gameId", (name) => {
-        isRequired(name, () => {
-            // @ts-ignore
-            return startGame();
-        });
-        mustBeString(name, (gameId) => {
-            // @ts-ignore
-            return startGame(gameId);
-        });
-    });
-    contract("playerId", (name) => {
-        isRequired(name, () => {
-            // @ts-ignore
-            return startGame("game-id");
-        });
-        mustBeString(name, (playerId) => {
-            // @ts-ignore
-            return startGame("game-id", playerId);
-        });
-    });
+	contract("gameId", (name) => {
+		isRequired(name, (gameId) => {
+			return startGame(gameId, "");
+		});
+		mustBeString(name, (gameId) => {
+			return startGame(gameId, "");
+		});
+	});
+	contract("playerId", (name) => {
+		isRequired(name, (playerId) => {
+			return startGame("game-id", playerId);
+		});
+		mustBeString(name, (playerId) => {
+			return startGame("game-id", playerId);
+		});
+	});
 });
 
 test("game must exist", async () => {
-    await expect(startGame("unknown-game-id", "player-id")).rejects.toThrow(GameNotFound);
+	const action = startGame("unknown-game-id", "player-id");
+	await expect(action).rejects.toThrow(GameNotFound);
 });
 
 describe("given the game exists", () => {
-    /** @type {string} */
-    let gameId;
-    beforeEach(async () => {
-        gameId = (await gameRepository.add(makeGame())).id;
-    });
+	/** @type {import("../../../src/entities/types").Game<string>} */
+	let game;
+	beforeEach(async () => {
+		game = await gameRepository.add(makeGame());
+	});
 
-    test("the player must be in the game", async () => {
-        await expect(startGame(gameId, "unknown-player-id")).rejects.toThrow(UserNotInGame);
-    });
+	test("the player must be in the game", async () => {
+		const action = startGame(game.id, "unknown-player-id");
+		await expect(action).rejects.toThrow(UnauthorizedGameModification);
+	});
 
-    describe("given the player is in the game", () => {
-        const addNewPlayerToGame = async () => {
-            const game = (await gameRepository.get(gameId)) || fail(new GameNotFound(gameId));
-            const playerId = `player-${game.playerIds.length + 1}`;
-            game.addPlayer(playerId);
-            await gameRepository.replace(game);
-            return playerId;
-        };
+	describe("given the player is in the game", () => {
+		/** @type {string} */
+		const playerId = "player-1";
+		beforeEach(() => {
+			game.addPlayer(playerId);
+		});
 
-        /** @type {string} */
-        let playerId;
-        beforeEach(async () => {
-            playerId = await addNewPlayerToGame();
-        });
+		test("game must have at least 4 players", async () => {
+			game.addPlayer("player-2");
+			game.addPlayer("player-3");
 
-        test("game must have at least 4 players", async () => {
-            await addNewPlayerToGame();
-            await addNewPlayerToGame();
+			const action = startGame(game.id, playerId);
+			await expect(action).rejects.toThrow(InsufficientPlayers);
+		});
 
-            await expect(startGame(gameId, playerId)).rejects.toThrow(NotEnoughPlayersToStartGame);
-        });
+		describe("given 4 players are in the game", () => {
+			beforeEach(async () => {
+				for (let i = 0; i < 3; i++) {
+					game.addPlayer(`player-${i + 2}`);
+				}
+			});
 
-        describe("given 4 players are in the game", () => {
-            beforeEach(async () => {
-                for (let i = 0; i < 3; i++) {
-                    await addNewPlayerToGame();
-                }
-            });
+			test("the game is started", async () => {
+				const result = await startGame(game.id, playerId);
+				expect(result).toBeInstanceOf(GameStarted);
+				expect(result).toHaveProperty("gameId", game.id);
+				expect(result).toHaveProperty("startedBy", playerId);
+			});
 
-            test("the game is started", async () => {
-                await startGame(gameId, playerId);
-                const updatedGame = (await gameRepository.get(gameId)) || fail(new GameNotFound(gameId));
-                expect(updatedGame.isStarted).toEqual(true);
-            });
+			describe("given the game was already started", () => {
+				beforeEach(async () => {
+					await startGame(game.id, playerId);
+				});
 
-            test("each player is starting a story", async () => {
-                await startGame(gameId, playerId);
-                const updatedGame = (await gameRepository.get(gameId)) || fail(new GameNotFound(gameId));
-                updatedGame.playerIds.forEach((userIdInGame) => {
-                    expect(updatedGame.playerActivity(userIdInGame)).toBe(PlayerActivity.StartingStory);
-                });
-            });
-
-            describe("given the game was already started", () => {
-                beforeEach(async () => {
-                    await startGame(gameId, playerId);
-                });
-
-                test("the game cannot be started twice", async () => {
-                    await expect(startGame(gameId, playerId)).rejects.toThrow(GameAlreadyStarted);
-                });
-            });
-        });
-    });
+				test("the game cannot be started twice", async () => {
+					const result = await startGame(game.id, playerId);
+					expect(result).toBeUndefined();
+				});
+			});
+		});
+	});
 });
 
 /**
@@ -121,6 +106,6 @@ describe("given the game exists", () => {
  * @returns
  */
 function startGame(gameId, playerId, maxEntries) {
-    const useCase = new StartGame(gameRepository, new DumbSubscribedPlayerRepository(), playerNotifierSpy);
-    return useCase.startGame(gameId, playerId, maxEntries);
+	const useCase = new StartGame(gameRepository, new DumbSubscribedPlayerRepository(), playerNotifierSpy);
+	return useCase.startGame(gameId, playerId, maxEntries);
 }

@@ -12,9 +12,15 @@ const { Game } = require("../../src/entities/Game");
 exports.FakeGameRepository = class FakeGameRepository {
     /** @type {Map<string, IGame<string>>} */
     #games;
+    #idGenerator;
 
-    constructor() {
+    /**
+     *
+     * @param {(number) => string} [idGenerator]
+     */
+    constructor(idGenerator) {
         this.#games = new Map();
+        this.#idGenerator = idGenerator || ((/** @type {number} */ num) => `FakeGame: ${num}`);
     }
 
     /**
@@ -40,7 +46,7 @@ exports.FakeGameRepository = class FakeGameRepository {
      * @returns {Promise<IGame<string>>}
      */
     async add(game) {
-        game.id = `FakeGame: ${this.#games.size}`;
+        game.id = this.#idGenerator(this.#games.size);
         const gameWithId = /** @type {IGame<string>} */ (game);
         this.#games.set(game.id, gameWithId);
         return gameWithId;

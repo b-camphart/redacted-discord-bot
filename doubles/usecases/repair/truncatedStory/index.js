@@ -12,12 +12,12 @@ const { DumbSubscribedPlayerRepository } = require("../../../repositories/Subscr
  * @returns
  */
 function repairTruncatedStory(gameId, playerId, storyIndex, replacement) {
-    const { RepairStory } = require("../../../../src/usecases");
-    const games = (this?.games && this.games()) || new FakeGameRepository();
-    const subscriptions = (this.subscriptions && this.subscriptions()) || new DumbSubscribedPlayerRepository();
-    const playerNotifier = (this.playerNotifier && this.playerNotifier()) || new DumbPlayerNotifier();
-    const useCase = new RepairStory(games, subscriptions, playerNotifier);
-    return useCase.repairStory(gameId, playerId, storyIndex, replacement);
+	const { RepairStory } = require("../../../../src/usecases");
+	const games = (this?.games && this.games()) || new FakeGameRepository();
+	const subscriptions = (this.subscriptions && this.subscriptions()) || new DumbSubscribedPlayerRepository();
+	const playerNotifier = (this.playerNotifier && this.playerNotifier()) || new DumbPlayerNotifier();
+	const useCase = new RepairStory(games, subscriptions, playerNotifier);
+	return useCase.repairTruncatedStory(gameId, storyIndex, playerId, replacement);
 }
 
 exports.repairTruncatedStory = repairTruncatedStory;
@@ -26,6 +26,6 @@ exports.repairTruncatedStory = repairTruncatedStory;
  *
  * @param {import("./types").RepairTruncatedStoryContext} context
  */
-exports.make = (context) => {
-    return repairTruncatedStory.bind(context);
+exports.make = context => {
+	return repairTruncatedStory.bind(context);
 };

@@ -11,12 +11,12 @@ const { DumbSubscribedPlayerRepository } = require("../../repositories/Subscribe
  * @returns
  */
 function continueStory(gameId, playerId, storyIndex, content) {
-    const { ContinueStory } = require("../../../src/usecases");
-    const games = (this?.games && this.games()) || new FakeGameRepository();
-    const subscriptions = (this?.subscriptions && this.subscriptions()) || new DumbSubscribedPlayerRepository();
-    const playerNotifier = (this?.playerNotifier && this.playerNotifier()) || new DumbPlayerNotifier();
-    const useCase = new ContinueStory(games, subscriptions, playerNotifier);
-    return useCase.continueStory(gameId, playerId, storyIndex, content);
+	const { ContinueStory } = require("../../../src/usecases");
+	const games = (this?.games && this.games()) || new FakeGameRepository();
+	const subscriptions = (this?.subscriptions && this.subscriptions()) || new DumbSubscribedPlayerRepository();
+	const playerNotifier = (this?.playerNotifier && this.playerNotifier()) || new DumbPlayerNotifier();
+	const useCase = new ContinueStory(games, subscriptions, playerNotifier);
+	return useCase.continueStory(gameId, storyIndex, playerId, content);
 }
 
 exports.continueStory = continueStory;
@@ -27,5 +27,5 @@ exports.continueStory = continueStory;
  * @returns
  */
 exports.make = (context) => {
-    return continueStory.bind(context);
+	return continueStory.bind(context);
 };

@@ -1,12 +1,12 @@
 const { NotFound } = require("./NotFound");
 
-exports.UserNotFound = class UserNotFound extends NotFound {
-    /**
-     *
-     * @param {string} userId
-     */
-    constructor(userId) {
-        super(`User ${userId} not found.`);
-        this.userId = userId;
-    }
+exports.PlayerNotFound = class PlayerNotFound extends NotFound {
+	/**
+	 *
+	 * @param {string} playerId
+	 */
+	constructor(playerId) {
+		super(`Player ${playerId} not found.`);
+		this.playerId = playerId;
+	}
 };

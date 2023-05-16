@@ -1,86 +1,113 @@
+const { makeGame, createStartedGame } = require("../../doubles/entities/makeGame");
 const { FakeGameRepository } = require("../../doubles/repositories/FakeGameRepository");
 const { FakeUserRepository } = require("../../doubles/repositories/FakeUserRepository");
 const { PlayerNotifierSpy } = require("../../doubles/repositories/PlayerNotifierDoubles");
 const { makeAddPlayerToGame } = require("../../doubles/usecases/addPlayerToGame/addPlayerToGameFactory");
-const { Game } = require("../../src/entities/Game");
 const { GameAlreadyStarted } = require("../../src/entities/Game.Exceptions");
 const { User } = require("../../src/entities/User");
 const { GameNotFound } = require("../../src/repositories/GameRepositoryExceptions");
-const { UserNotFound } = require("../../src/repositories/UserRepositoryExceptions");
+const { PlayerNotFound } = require("../../src/repositories/UserRepositoryExceptions");
 const { JoinGame } = require("../../src/usecases/joinGame/JoinGame");
 const { PlayerJoinedGame } = require("../../src/usecases/joinGame/PlayerJoinedGame");
-const { UserAlreadyInGame } = require("../../src/usecases/joinGame/UserAlreadyInGame");
+const { repeat } = require("../../src/utils/iteration");
+const { contract, isRequired, mustBeString } = require("../contracts");
+/**
+ * @template {string | undefined} ID
+ * @typedef {import("../../src/entities/types").Game<ID>} Game
+ */
 
-describe("AddPlayerToGame", () => {
-    /** @type {JoinGame} */
-    let addPlayerToGame;
-    /** @type {FakeGameRepository} */
-    let gameRepository;
-    /** @type {FakeUserRepository} */
-    let userRepository;
-    /** @type {PlayerNotifierSpy} */
-    let playerNotifierSpy;
+/** @type {import("../../src/usecases/types").GameJoining} */
+let addPlayerToGame;
+/** @type {FakeGameRepository} */
+let gameRepository;
+/** @type {FakeUserRepository} */
+let userRepository;
+/** @type {PlayerNotifierSpy} */
+let playerNotifierSpy;
 
-    beforeEach(() => {
-        gameRepository = new FakeGameRepository();
-        userRepository = new FakeUserRepository();
-        playerNotifierSpy = new PlayerNotifierSpy();
-        addPlayerToGame = makeAddPlayerToGame(gameRepository, userRepository, playerNotifierSpy);
-    });
+beforeEach(() => {
+	gameRepository = new FakeGameRepository();
+	userRepository = new FakeUserRepository();
+	playerNotifierSpy = new PlayerNotifierSpy();
+	addPlayerToGame = makeAddPlayerToGame(gameRepository, userRepository, playerNotifierSpy);
+});
 
-    test("game must exist", async () => {
-        const userId = "user-id";
-        await expect(addPlayerToGame.addPlayer("unknown-game-id", userId)).rejects.toThrow(GameNotFound);
-    });
+describe("contract", () => {
+	contract("gameId", (name) => {
+		isRequired(name, (gameId) => {
+			return addPlayerToGame.joinGame(gameId, "playerId");
+		});
+		mustBeString(name, (gameId) => {
+			return addPlayerToGame.joinGame(gameId, "playerId");
+		});
+	});
+	contract("playerId", (name) => {
+		isRequired(name, (playerId) => {
+			return addPlayerToGame.joinGame("gameId", playerId);
+		});
+		mustBeString(name, (playerId) => {
+			return addPlayerToGame.joinGame("gameId", playerId);
+		});
+	});
+});
 
-    test("user must exist", async () => {
-        const gameId = (await gameRepository.add(new Game())).id;
-        await expect(addPlayerToGame.addPlayer(gameId, "unknown-user-id")).rejects.toThrow(UserNotFound);
-    });
+let unknownGameId = "unknown-game-id";
+let unknownPlayerId = "unknown-player-id";
 
-    test("user must not already be in the game", async () => {
-        const userId = (await userRepository.add(new User())).id;
-        const game = new Game();
-        game.addPlayer(userId);
-        const gameId = (await gameRepository.add(game)).id;
+/** @type {string} */
+let playerId;
+beforeEach(async () => {
+	playerId = (await userRepository.add(new User())).id;
+});
 
-        await expect(addPlayerToGame.addPlayer(gameId, userId)).rejects.toThrow(UserAlreadyInGame);
-    });
+/** @type {string} */
+let unstartedGameId;
+beforeEach(async () => {
+	unstartedGameId = (await gameRepository.add(makeGame())).id;
+});
 
-    test("game must still be pending", async () => {
-        const userId = (await userRepository.add(new User())).id;
-        const game = new Game();
-        for (let i = 0; i < 4; i++) {
-            game.addPlayer(`${i}`);
-        }
-        game.start();
-        const gameId = (await gameRepository.add(game)).id;
+describe("Preconditions", () => {
+	describe("Game must exist", () => {
+		test("Joining non-existent game fails", async () => {
+			const action = addPlayerToGame.joinGame(unknownGameId, playerId);
+			await expect(action).rejects.toThrow(GameNotFound);
+		});
+	});
 
-        await expect(addPlayerToGame.addPlayer(gameId, userId)).rejects.toThrow(GameAlreadyStarted);
-    });
+	describe("Player must exist", () => {
+		test("Joining game as an unknown player fails", async () => {
+			const action = addPlayerToGame.joinGame(unstartedGameId, unknownPlayerId);
+			await expect(action).rejects.toThrow(PlayerNotFound);
+		});
+	});
 
-    test("adds the user to the game", async () => {
-        const userId = (await userRepository.add(new User())).id;
-        const gameId = (await gameRepository.add(new Game())).id;
+	describe("The game must not have stared", () => {
+		test("Joining a game that has already started fails", async () => {
+			const startedGame = createStartedGame({ includedPlayerIds: [playerId] });
+			const startedGameId = (await gameRepository.add(startedGame)).id;
 
-        const updatedGame = await addPlayerToGame.addPlayer(gameId, userId);
-        expect(updatedGame.hasPlayer(userId)).toBe(true);
-        expect(await gameRepository.get(gameId)).toEqual(updatedGame);
-    });
+			const action = addPlayerToGame.joinGame(startedGameId, playerId);
+			await expect(action).rejects.toThrow(GameAlreadyStarted);
+		});
+	});
+});
 
-    test("notifies all players when a player is added to the game", async () => {
-        const gameId = (await gameRepository.add(new Game())).id;
-        const player1 = await userRepository.add(new User());
-        const player2 = await userRepository.add(new User());
+describe("Postconditions", () => {
+	describe("The player is added to the game", () => {
+		test("Joining a game produces an event", async () => {
+			const result = await addPlayerToGame.joinGame(unstartedGameId, playerId);
 
-        await addPlayerToGame.addPlayer(gameId, player1.id);
-        await addPlayerToGame.addPlayer(gameId, player2.id);
+			expect(result).toBeInstanceOf(PlayerJoinedGame);
+			expect(result).toHaveProperty("gameId", unstartedGameId);
+			expect(result).toHaveProperty("addedPlayerId", playerId);
+		});
 
-        expect(playerNotifierSpy.playersNotified).toEqual([
-            {
-                userId: player1.id,
-                notification: new PlayerJoinedGame(gameId, player2.id),
-            },
-        ]);
-    });
+		test("Joining the game again produces nothing", async () => {
+			await addPlayerToGame.joinGame(unstartedGameId, playerId);
+
+			const result = await addPlayerToGame.joinGame(unstartedGameId, playerId);
+
+			expect(result).toBeUndefined();
+		});
+	});
 });
