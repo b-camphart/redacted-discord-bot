@@ -1,43 +1,79 @@
 /**
- * @template {HttpResponse} T
+ * @template {import("../../../types").HttpResponse} T
  * @typedef {import("../../../types").Controller<T>} Controller<T>
+ */
+/**
+ * @template {import("../../../types").HttpResponse} T
+ * @typedef {import("../../types").RequestAuthorizer<T>} RequestAuthorizer<T>
  */
 
 const { PlayerActivityService } = require("../../../../../src/usecases/PlayerActivityService");
+const { HttpUseCaseErrorHandler } = require("../../HttpUseCaseErrorHandler");
+const { RequestValidatorImpl, getGameId, getUserId } = require("../../getUserId");
 const { PlayerActivityPresenter } = require("../PlayerActivityPresenter");
 const { PlayerActivityView } = require("../PlayerActivityView");
 
 /**
- * @template {HttpResponse} T
+ * @template {import("../../../types").HttpResponse} T
  * @implements {Controller<T>}
+ * @implements {RequestAuthorizer<T>}
  */
 class GetPlayerActivityController {
-    #responseTypes;
-    #usecase;
-    /**
-     * @param {import("../../../types").ResponseTypes<T>} responseTypes
-     * @param {PlayerActivityService} usecase
-     */
-    constructor(responseTypes, usecase) {
-        this.#responseTypes = responseTypes;
-        this.#usecase = usecase;
-    }
+	#responseTypes;
+	#service;
+	#gameJoining;
+	#games;
+	/**
+	 * @param {import("../../../types").ResponseTypes<T>} responseTypes
+	 * @param {PlayerActivityService} service
+	 * @param {UseCases.GameJoining} gameJoining
+	 * @param {import("../../../../../src/repositories/GameRepository").ReadOnlyGameRepository} games
+	 */
+	constructor(responseTypes, service, gameJoining, games) {
+		this.#responseTypes = responseTypes;
+		this.#service = service;
+		this.#gameJoining = gameJoining;
+		this.#games = games;
+	}
 
-    /**
-     *
-     * @param {import("../../../types").HttpRequest} request
-     */
-    async handle(request) {
-        const userId = request.session?.id;
-        if (userId === undefined) return this.#responseTypes.sendStatus(401);
-        const gameId = request.params.gameId;
-        if (gameId === undefined) return this.#responseTypes.sendStatus(404);
-        const activity = await this.#usecase.getPlayerActivity(gameId, userId);
-        return this.#responseTypes.send(
-            activity.accept(new PlayerActivityPresenter(gameId)).view(new PlayerActivityView()),
-            "text/html"
-        );
-    }
+	responseTypes() {
+		return this.#responseTypes;
+	}
+
+	/**
+	 *
+	 * @param {import("../../../types").HttpRequest} request
+	 */
+	handle = async (request) => {
+		const validator = new RequestValidatorImpl(this.#responseTypes);
+
+		let gameId = getGameId(validator, request);
+
+		const badRequest = validator.badRequest();
+		if (badRequest != null) return badRequest;
+
+		/** @type {string} */
+		gameId = /** @type {string} */ (gameId);
+
+		const userId = getUserId(this, request);
+		if (typeof userId !== "string") return userId;
+
+		if (!(await this.#games.get(gameId))?.hasPlayer(userId)) {
+			await this.#gameJoining
+				.joinGame(gameId, userId)
+				.catch(new HttpUseCaseErrorHandler(this.#responseTypes).handle);
+		}
+
+		return await this.#service
+			.getPlayerActivity(gameId, userId)
+			.then((activity) =>
+				this.#responseTypes.send(
+					activity.accept(new PlayerActivityPresenter(gameId)).view(new PlayerActivityView()),
+					"text/html"
+				)
+			)
+			.catch(new HttpUseCaseErrorHandler(this.#responseTypes).handle);
+	};
 }
 
 exports.GetPlayerActivityController = GetPlayerActivityController;

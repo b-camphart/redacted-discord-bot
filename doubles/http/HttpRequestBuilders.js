@@ -5,10 +5,10 @@
  * @returns {import("../../environments/http/types").HttpRequest}
  */
 exports.createEmptyRequest = (ipAddress = "", params = {}) => {
-	return {
+	return httpRequest({
 		ipAddress,
 		params,
-	};
+	});
 };
 
 /**
@@ -19,11 +19,11 @@ exports.createEmptyRequest = (ipAddress = "", params = {}) => {
  * @returns {import("../../environments/http/types").HttpRequest}
  */
 exports.createUnauthenticatedRequest = (ipAddress = "", params = {}, body = undefined) => {
-	return {
+	return httpRequest({
 		ipAddress,
 		params,
 		body,
-	};
+	});
 };
 
 /**
@@ -35,10 +35,27 @@ exports.createUnauthenticatedRequest = (ipAddress = "", params = {}, body = unde
  * @returns {import("../../environments/http/types").HttpRequest}
  */
 exports.createSessionedRequest = (session, ipAddress = "", params = {}, body = undefined) => {
-	return {
+	return httpRequest({
 		session,
 		ipAddress,
 		params,
 		body,
+	});
+};
+
+/**
+ * @param {Partial<import("../../environments/http/types").HttpRequest>} params
+ *
+ * @returns {import("../../environments/http/types").HttpRequest}
+ */
+const httpRequest = ({ method, path, ipAddress, session, params, body } = {}) => {
+	return {
+		method: method || "GET",
+		path: path || "/",
+		ipAddress,
+		session,
+		params,
+		body,
 	};
 };
+exports.httpRequest = httpRequest;

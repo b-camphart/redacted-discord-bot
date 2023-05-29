@@ -66,7 +66,11 @@ describe("returns new game url on success", () => {
 	test("sends json data with new url", async () => {
 		const response = await successfulController.handle(requestWithSessionId);
 		expect(response).toBeDefined();
-		expect(response).toHaveProperty("content", JSON.stringify({ gameUrl: "/game/1846" }));
-		expect(response).toHaveProperty("contentType", "text/json");
+		expect(response).toHaveProperty("contentType", "application/json");
+		expect(response).toHaveProperty("body");
+		const body = JSON.parse(response.body);
+		expect(body).toHaveProperty("gameId", "1846");
+		expect(body).toHaveProperty("gameUrl", "/game/1846");
+		expect(body).toHaveProperty("createdBy", sessionId);
 	});
 });

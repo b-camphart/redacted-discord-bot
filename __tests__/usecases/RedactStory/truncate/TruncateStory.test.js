@@ -1,17 +1,17 @@
-const { makeGame, createStartedGame } = require("../../../doubles/entities/makeGame");
-const { FakeGameRepository } = require("../../../doubles/repositories/FakeGameRepository");
-const { GameNotStarted } = require("../../../src/entities/Game.Exceptions");
+const { makeGame, createStartedGame } = require("../../../../doubles/entities/makeGame");
+const { FakeGameRepository } = require("../../../../doubles/repositories/FakeGameRepository");
+const { GameNotStarted } = require("../../../../src/entities/Game.Exceptions");
 const {
 	UnauthorizedStoryModification,
 	StoryNotFound,
 	IncorrectStoryModification,
-} = require("../../../src/entities/Game.Story.Exceptions");
-const { censorableWords } = require("../../../src/entities/Words");
-const { GameNotFound } = require("../../../src/repositories/GameRepositoryExceptions");
-const { IndexOutOfBounds } = require("../../../src/usecases/validation");
-const { range } = require("../../../src/utils/range");
-const { OutOfRange } = require("../../../src/validation/numbers");
-const { contract, isRequired, mustBeString, mustBeNumber } = require("../../contracts");
+} = require("../../../../src/entities/Game.Story.Exceptions");
+const { censorableWords } = require("../../../../src/entities/Words");
+const { GameNotFound } = require("../../../../src/repositories/GameRepositoryExceptions");
+const { IndexOutOfBounds } = require("../../../../src/usecases/validation");
+const { range } = require("../../../../src/utils/range");
+const { OutOfRange } = require("../../../../src/validation/numbers");
+const { contract, isRequired, mustBeString, mustBeNumber } = require("../../../contracts");
 
 /** @type {FakeGameRepository} */
 let games;
@@ -31,7 +31,7 @@ beforeEach(async () => {
 	unstartedGameId = (await games.add(game)).id;
 });
 
-/** @type {import("../../../src/entities/types").Game<string>} */
+/** @type {import("../../../../src/entities/types").Game<string>} */
 let startedGame;
 const initialStoryContent = "Some initial story content.";
 const censorableWordCount = censorableWords(initialStoryContent).length;
@@ -139,7 +139,7 @@ describe("Preconditions", () => {
 		});
 	});
 	describe("The story must be ready to be redacted", () => {
-		const Redactions = require("./Redactions");
+		const Redactions = require("../Redactions");
 		Object.entries(Redactions).forEach(([redactionName, redaction]) => {
 			test(`Truncating a story that has had ${redactionName} applied, fails`, async () => {
 				redaction.redact(startedGame, playerIds[1], firstPlayerStoryIndex);
@@ -197,5 +197,5 @@ describe("Postconditions", () => {
 });
 
 const context = { games: () => games };
-const truncateStory = require("../../../doubles/usecases/truncateStory").makeTruncateStory(context);
-const repairTruncation = require("../../../doubles/usecases/repair/truncatedStory").make(context);
+const truncateStory = require("../../../../doubles/usecases/truncateStory").makeTruncateStory(context);
+const repairTruncation = require("../../../../doubles/usecases/repair/truncatedStory").make(context);

@@ -1,22 +1,22 @@
-const { makeGame, createStartedGame } = require("../../doubles/entities/makeGame");
-const { FakeGameRepository } = require("../../doubles/repositories/FakeGameRepository");
-const { FakeUserRepository } = require("../../doubles/repositories/FakeUserRepository");
-const { PlayerNotifierSpy } = require("../../doubles/repositories/PlayerNotifierDoubles");
-const { makeAddPlayerToGame } = require("../../doubles/usecases/addPlayerToGame/addPlayerToGameFactory");
-const { GameAlreadyStarted } = require("../../src/entities/Game.Exceptions");
-const { User } = require("../../src/entities/User");
-const { GameNotFound } = require("../../src/repositories/GameRepositoryExceptions");
-const { PlayerNotFound } = require("../../src/repositories/UserRepositoryExceptions");
-const { JoinGame } = require("../../src/usecases/joinGame/JoinGame");
-const { PlayerJoinedGame } = require("../../src/usecases/joinGame/PlayerJoinedGame");
-const { repeat } = require("../../src/utils/iteration");
-const { contract, isRequired, mustBeString } = require("../contracts");
+const { makeGame, createStartedGame } = require("../../../doubles/entities/makeGame");
+const { FakeGameRepository } = require("../../../doubles/repositories/FakeGameRepository");
+const { FakeUserRepository } = require("../../../doubles/repositories/FakeUserRepository");
+const { PlayerNotifierSpy } = require("../../../doubles/repositories/PlayerNotifierDoubles");
+const { makeAddPlayerToGame } = require("../../../doubles/usecases/addPlayerToGame/addPlayerToGameFactory");
+const { GameAlreadyStarted } = require("../../../src/entities/Game.Exceptions");
+const { User } = require("../../../src/entities/User");
+const { GameNotFound } = require("../../../src/repositories/GameRepositoryExceptions");
+const { PlayerNotFound } = require("../../../src/repositories/UserRepositoryExceptions");
+const { JoinGame } = require("../../../src/usecases/joinGame/JoinGame");
+const { PlayerJoinedGame } = require("../../../src/usecases/joinGame/PlayerJoinedGame");
+const { repeat } = require("../../../src/utils/iteration");
+const { contract, isRequired, mustBeString } = require("../../contracts");
 /**
  * @template {string | undefined} ID
- * @typedef {import("../../src/entities/types").Game<ID>} Game
+ * @typedef {import("../../../src/entities/types").Game<ID>} Game
  */
 
-/** @type {import("../../src/usecases/types").GameJoining} */
+/** @type {import("../../../src/usecases/types").GameJoining} */
 let addPlayerToGame;
 /** @type {FakeGameRepository} */
 let gameRepository;

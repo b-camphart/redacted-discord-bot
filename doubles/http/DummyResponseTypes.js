@@ -30,6 +30,22 @@ exports.DummyResponseTypes = class DummyResponseTypes {
 		return { status, message: customMessage };
 	}
 	/**
+	 * {@link ResponseTypes.sendStatusWithBody}
+	 *
+	 * @param {object} params
+	 */
+	sendStatusWithBody(params) {
+		return params;
+	}
+	/**
+	 * {@link ResponseTypes.sendObject}
+	 *
+	 * @param {object} obj
+	 */
+	sendObject(obj) {
+		return obj;
+	}
+	/**
 	 * {@link ResponseTypes.redirect}
 	 *
 	 * @param {string} relativePath

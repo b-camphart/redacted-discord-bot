@@ -2,7 +2,6 @@ const { UnauthorizedGameModification, InsufficientPlayers } = require("../../ent
 const { emitGameUpdate } = require("../abstractUseCases/GameUpdateEmitter");
 const { PlayerInGameUpdatesGameUseCase } = require("../abstractUseCases/PlayerInGameUpdatesGameUseCase");
 const { GameStarted } = require("./GameStarted");
-const { NotEnoughPlayersToStartGame } = require("./validation");
 /**
  * @template {string | undefined} T
  * @typedef {import("../../entities/types").Game<T>} Game<T>
